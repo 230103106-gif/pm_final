@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaturnPro | Geo-Optimized Furniture Orders</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div class="page-shell">
+    <aside class="hero-panel">
+      <p class="eyebrow">Capstone Project</p>
+      <h1>SaturnPro</h1>
+      <p class="hero-copy">
+        Geo-Optimized Furniture Order Management System with FastAPI, SQLite, H3 regional indexing,
+        audit logging, and event-driven warehouse notifications.
+      </p>
+      <div class="feature-stack">
+        <div class="feature-card">
+          <h2>What It Solves</h2>
+          <p>Manual order tracking, unclear customer visibility, and no region-based order analytics.</p>
+        </div>
+        <div class="feature-card">
+          <h2>Core Roles</h2>
+          <p>Admin manages users and orders, Customer places orders, Warehouse Manager monitors region queues.</p>
+        </div>
+        <div class="feature-card">
+          <h2>Demo Notes</h2>
+          <p>Swagger UI stays available at <a href="/docs" target="_blank" rel="noreferrer">/docs</a> for API review.</p>
+        </div>
+      </div>
+      <div class="credential-panel">
+        <h2>Demo Credentials</h2>
+        <ul>
+          <li><strong>Admin</strong>: admin@saturnpro.local / Admin#1234</li>
+          <li><strong>Customer</strong>: customer@saturnpro.local / Customer#1234</li>
+          <li><strong>Warehouse</strong>: warehouse@saturnpro.local / Warehouse#1234</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="workspace-panel">
+      <section id="loginSection" class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Access</p>
+            <h2>Sign In</h2>
+          </div>
+          <p class="panel-note">Use one of the seeded roles to explore the full workflow.</p>
+        </div>
+        <form id="loginForm" class="login-form">
+          <label>
+            Email
+            <input type="email" id="email" value="admin@saturnpro.local" required>
+          </label>
+          <label>
+            Password
+            <input type="password" id="password" value="Admin#1234" required>
+          </label>
+          <button type="submit" class="primary-button">Enter Dashboard</button>
+        </form>
+        <p id="loginError" class="error-message"></p>
+      </section>
+
+      <section id="appSection" class="panel hidden">
+        <div class="panel-header dashboard-header">
+          <div>
+            <p class="eyebrow">Live Dashboard</p>
+            <h2 id="welcomeTitle">Operations Overview</h2>
+          </div>
+          <div class="header-actions">
+            <div id="userBadge" class="user-badge"></div>
+            <button id="logoutButton" class="secondary-button">Logout</button>
+          </div>
+        </div>
+
+        <div id="statsGrid" class="stats-grid"></div>
+
+        <div class="tab-strip">
+          <button class="tab-button active" data-view="orders">Orders</button>
+          <button class="tab-button" data-view="analytics">Regional Analytics</button>
+          <button class="tab-button" data-view="notifications">Notifications</button>
+          <button class="tab-button admin-only" data-view="users">Users</button>
+          <button class="tab-button admin-only" data-view="audit">Audit Log</button>
+        </div>
+
+        <div id="globalMessage" class="status-banner hidden"></div>
+
+        <section id="view-orders" class="view active">
+          <div class="content-grid">
+            <div id="orderComposerCard" class="subpanel"></div>
+            <div class="subpanel">
+              <div class="subpanel-header">
+                <h3>Order Pipeline</h3>
+                <p id="orderCountLabel"></p>
+              </div>
+              <div id="ordersList" class="order-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-analytics" class="view hidden">
+          <div class="subpanel">
+            <div class="subpanel-header">
+              <h3>H3 Region Breakdown</h3>
+              <p>Counts and revenue grouped by hex zone.</p>
+            </div>
+            <div id="analyticsGrid" class="analytics-grid"></div>
+          </div>
+        </section>
+
+        <section id="view-notifications" class="view hidden">
+          <div class="subpanel">
+            <div class="subpanel-header">
+              <h3>Warehouse Event Feed</h3>
+              <p>Orders entering fulfillment are published through the Python queue worker.</p>
+            </div>
+            <div id="notificationList" class="notification-list"></div>
+          </div>
+        </section>
+
+        <section id="view-users" class="view hidden">
+          <div class="content-grid">
+            <div class="subpanel">
+              <div class="subpanel-header">
+                <h3>Create User</h3>
+                <p>Admin-only demo utility for RBAC management.</p>
+              </div>
+              <form id="userForm" class="stack-form">
+                <label>
+                  Full Name
+                  <input type="text" id="userFullName" required>
+                </label>
+                <label>
+                  Email
+                  <input type="email" id="userEmail" required>
+                </label>
+                <label>
+                  Password
+                  <input type="text" id="userPassword" minlength="8" required>
+                </label>
+                <label>
+                  Role
+                  <select id="userRole">
+                    <option value="customer">Customer</option>
+                    <option value="warehouse_manager">Warehouse Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <button type="submit" class="primary-button">Create User</button>
+              </form>
+            </div>
+            <div class="subpanel">
+              <div class="subpanel-header">
+                <h3>User Directory</h3>
+                <p>Role distribution for the demo environment.</p>
+              </div>
+              <div id="userList" class="user-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-audit" class="view hidden">
+          <div class="subpanel">
+            <div class="subpanel-header">
+              <h3>Audit Trail</h3>
+              <p>Every important action is persisted for traceability.</p>
+            </div>
+            <div id="auditList" class="audit-list"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="itemRowTemplate">
+    <div class="item-row">
+      <input type="text" class="item-product" placeholder="Product name" required>
+      <input type="text" class="item-sku" placeholder="SKU" required>
+      <input type="number" class="item-quantity" placeholder="Qty" min="1" value="1" required>
+      <input type="number" class="item-price" placeholder="Unit price" min="1" step="0.01" value="100" required>
+      <button type="button" class="remove-item danger-link">Remove</button>
+    </div>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
