@@ -88,6 +88,16 @@ def inject_styles() -> None:
             [data-testid="stSidebarNavSeparator"] {
                 display: none !important;
             }
+            header[data-testid="stHeader"],
+            [data-testid="stToolbar"],
+            [data-testid="stDecoration"],
+            [data-testid="stStatusWidget"],
+            button[kind="header"],
+            #MainMenu,
+            footer {
+                display: none !important;
+                visibility: hidden !important;
+            }
             .hero-card, .metric-card, .surface-card, .table-card {
                 border: 1px solid rgba(24, 34, 45, 0.08);
                 border-radius: 20px;
