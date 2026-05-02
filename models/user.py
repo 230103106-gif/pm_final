@@ -9,6 +9,8 @@ from core.utils import utcnow
 
 
 class User(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True, max_length=80)
     full_name: str = Field(max_length=120)
@@ -21,6 +23,8 @@ class User(SQLModel, table=True):
 
 
 class UserSession(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
     session_hash: str = Field(index=True, unique=True, max_length=128)

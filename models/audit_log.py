@@ -9,6 +9,8 @@ from core.utils import utcnow
 
 
 class AuditLog(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: Optional[int] = Field(default=None, primary_key=True)
     actor_user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True)
     actor_username: str = Field(index=True, max_length=80)

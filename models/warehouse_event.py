@@ -9,6 +9,8 @@ from core.utils import utcnow
 
 
 class WarehouseEvent(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: Optional[int] = Field(default=None, primary_key=True)
     order_id: int = Field(foreign_key="order.id", index=True)
     event_type: str = Field(index=True, max_length=80)

@@ -9,6 +9,8 @@ from core.utils import utcnow
 
 
 class Order(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: Optional[int] = Field(default=None, primary_key=True)
     order_number: str = Field(index=True, unique=True, max_length=40)
     customer_id: int = Field(foreign_key="user.id", index=True)
