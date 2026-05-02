@@ -1,10 +1,11 @@
 # Geo-Optimized Furniture Order Management System
 
-A multi-page Streamlit application for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
+A FastAPI backend plus optional Streamlit workspace for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
 
 ## What It Does
 
-- Runs a customer storefront for placing furniture orders through a staged confirmation flow
+- Exposes a Swagger/Postman-ready API for authentication, orders, products, warehouse events, analytics, and audit logs
+- Runs an optional customer storefront for placing furniture orders through a staged confirmation flow
 - Manages a realistic order lifecycle: `Created -> Confirmed -> Assigned -> Packed -> Out for Delivery -> Delivered`
 - Enforces both role-based access control and region-based attribute access control
 - Uses H3 geospatial indexing to map delivery coordinates into operational regions
@@ -54,6 +55,11 @@ Data Layer
   models/audit_log.py
   models/warehouse_event.py
   SQLite: data/app.db
+
+API Layer (FastAPI)
+  api.py
+  Swagger UI: /docs
+  OpenAPI schema: /openapi.json
 ```
 
 ## Key Features
@@ -112,10 +118,25 @@ The app auto-seeds on first run with:
 
 ```bash
 pip install -r requirements.txt
+uvicorn api:app --reload
+```
+
+Open the API docs at `http://127.0.0.1:8000/docs`.
+
+### Optional Streamlit workspace
+
+```bash
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
 The first application start creates and seeds `data/app.db`.
+
+### API demo flow
+
+1. `POST /auth/login` with one of the seed accounts.
+2. Authorize in Swagger with the returned bearer token.
+3. Use `/orders`, `/products`, `/warehouse/events`, `/analytics/kpis`, and `/audit/logs` according to the account role.
 
 ### Run tests
 
@@ -150,6 +171,7 @@ Files are written to `data/exports/` and also exposed through Streamlit download
 
 ```text
 final_project/
+  api.py
   app.py
   requirements.txt
   README.md

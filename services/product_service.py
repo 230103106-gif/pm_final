@@ -12,6 +12,16 @@ from models.product import Product
 from services import audit_service
 
 
+REQUIRED_TEXT_FIELDS = ("sku", "name", "category", "material", "description", "dimensions")
+
+
+def _validate_required_text(payload: dict[str, Any], fields: tuple[str, ...]) -> None:
+    for field in fields:
+        value = str(payload.get(field, "")).strip()
+        if not value:
+            raise ValidationError(f"{field.replace('_', ' ').title()} is required.")
+
+
 def get_product(session: Session, product_id: int) -> Product:
     product = session.get(Product, product_id)
     if not product:
@@ -67,6 +77,7 @@ def product_rows(products: list[Product]) -> list[dict[str, Any]]:
 
 
 def create_product(session: Session, actor, payload: dict[str, Any]) -> Product:
+    _validate_required_text(payload, REQUIRED_TEXT_FIELDS)
     sku = payload["sku"].strip().upper()
     existing = session.exec(select(Product).where(Product.sku == sku)).first()
     if existing:
@@ -103,6 +114,7 @@ def create_product(session: Session, actor, payload: dict[str, Any]) -> Product:
 
 def update_product(session: Session, actor, product_id: int, payload: dict[str, Any]) -> Product:
     product = get_product(session, product_id)
+    _validate_required_text(payload, REQUIRED_TEXT_FIELDS[1:])
     if payload["price"] <= 0:
         raise ValidationError("Price must be greater than zero.")
     if payload["stock_quantity"] < 0:

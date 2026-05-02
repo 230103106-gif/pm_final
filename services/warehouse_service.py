@@ -5,7 +5,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from core.abac import can_access_order
-from core.config import ORDER_STATUS_CANCELLED, ORDER_STATUS_CONFIRMED, ROLE_ADMIN, ROLE_WAREHOUSE
+from core.config import ORDER_STATUS_CANCELLED, ORDER_STATUS_CONFIRMED, ORDER_STATUS_CREATED, ROLE_ADMIN, ROLE_WAREHOUSE
 from core.utils import AuthorizationError, NotFoundError, ValidationError, region_label, utcnow
 from models.order import Order
 from models.warehouse_event import WarehouseEvent
@@ -13,6 +13,9 @@ from services import audit_service, order_service
 
 
 def list_events(session: Session, actor, *, event_status: str | None = None, limit: int = 300) -> list[dict[str, Any]]:
+    if actor.role not in {ROLE_ADMIN, ROLE_WAREHOUSE}:
+        raise AuthorizationError("Only operations users can view warehouse events.")
+
     query = select(WarehouseEvent).order_by(WarehouseEvent.created_at.desc())
     if event_status and event_status != "All":
         query = query.where(WarehouseEvent.status == event_status)

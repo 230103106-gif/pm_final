@@ -4,6 +4,7 @@ import csv
 import io
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 import h3
@@ -34,6 +35,24 @@ from models.user import User
 from services import audit_service
 
 
+ORDER_NUMBER_RE = re.compile(r"^FG-(?P<period>\d{4})-(?P<sequence>\d+)$")
+REQUIRED_ORDER_FIELDS = {
+    "recipient_name": "Recipient name",
+    "phone": "Phone",
+    "address_line1": "Address line 1",
+    "city": "City",
+    "state": "State",
+    "postal_code": "Postal code",
+    "country": "Country",
+}
+
+
+def _validate_required_order_fields(fields: dict[str, str]) -> None:
+    for field, label in REQUIRED_ORDER_FIELDS.items():
+        if not fields.get(field, "").strip():
+            raise ValidationError(f"{label} is required.")
+
+
 def city_catalog() -> list[dict[str, Any]]:
     payload = json.loads(SEED_DATA_PATH.read_text(encoding="utf-8"))
     return payload["cities"]
@@ -60,9 +79,14 @@ def get_order(session: Session, actor: User, order_id: int) -> Order:
 
 
 def next_order_number(session: Session) -> str:
-    existing_order_ids = session.exec(select(Order.id)).all()
-    sequence = len(existing_order_ids) + 1001
-    return f"FG-{utcnow().strftime('%y%m')}-{sequence}"
+    period = utcnow().strftime("%y%m")
+    order_numbers = session.exec(select(Order.order_number).where(Order.order_number.startswith(f"FG-{period}-"))).all()
+    latest_sequence = 1000
+    for order_number in order_numbers:
+        match = ORDER_NUMBER_RE.match(order_number)
+        if match and match.group("period") == period:
+            latest_sequence = max(latest_sequence, int(match.group("sequence")))
+    return f"FG-{period}-{latest_sequence + 1}"
 
 
 def create_order(
@@ -87,6 +111,17 @@ def create_order(
         raise AuthorizationError("Only customer accounts can place new orders.")
     if quantity <= 0:
         raise ValidationError("Quantity must be greater than zero.")
+    _validate_required_order_fields(
+        {
+            "recipient_name": recipient_name,
+            "phone": phone,
+            "address_line1": address_line1,
+            "city": city,
+            "state": state,
+            "postal_code": postal_code,
+            "country": country,
+        }
+    )
     validate_coordinates(latitude, longitude)
 
     product = session.get(Product, product_id)

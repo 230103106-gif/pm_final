@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from html import escape
 from textwrap import dedent
 
@@ -81,7 +82,7 @@ def render_topbar(user) -> None:
     with header_right:
         st.markdown(
             f"""
-            <div class="topbar-card" style="display:flex;flex-direction:column;gap:0.7rem;justify-content:center;min-height:100%;">
+            <div class="scope-card">
                 <span class="app-chip">{escape(region_label(getattr(user, "assigned_region", None))) if user.role == ROLE_WAREHOUSE else "Enterprise scope"}</span>
             </div>
             """,
@@ -114,6 +115,7 @@ def render_shortcuts(views: list[str], role: str) -> None:
     items = [item for item in ROLE_NAVIGATION[role] if item["view"] in views]
     if not items:
         return
+    st.markdown('<div class="shortcut-spacer"></div>', unsafe_allow_html=True)
     shortcut_columns = st.columns(len(items), gap="small")
     active_view = current_view()
     for column, item in zip(shortcut_columns, items):
@@ -126,6 +128,267 @@ def render_shortcuts(views: list[str], role: str) -> None:
             )
             if clicked and item["view"] != active_view:
                 set_view(item["view"], rerun=True)
+
+
+def render_gap() -> None:
+    st.markdown('<div class="section-gap"></div>', unsafe_allow_html=True)
+
+
+def render_order_cards(
+    rows: list[dict],
+    *,
+    limit: int = 8,
+    show_customer: bool = True,
+    empty_message: str = "No orders to show.",
+) -> None:
+    if not rows:
+        st.info(empty_message)
+        return
+
+    cards: list[str] = []
+    for row in rows[:limit]:
+        fields = [
+            ("Customer", row["customer_name"]) if show_customer else ("Recipient", row["recipient_name"]),
+            ("Region", row["region_label"]),
+            ("City", row["city"]),
+            ("Total", currency(row["total_amount"])),
+        ]
+        fields_html = "".join(
+            f'<div class="order-field"><div class="order-field-label">{escape(label)}</div>'
+            f'<div class="order-field-value">{escape(str(value))}</div></div>'
+            for label, value in fields
+        )
+        cards.append(
+            '<div class="order-card">'
+            '<div class="order-card-head">'
+            f'<div><div class="order-title">{escape(row["order_number"])} · {escape(row["product_name"])}</div>'
+            f'<div class="order-subtitle">{escape(row["address"])}</div></div>'
+            f'<div>{render_status_badge(row["status"])}</div>'
+            '</div>'
+            f'<div class="order-card-grid">{fields_html}</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="order-list">{"".join(cards)}</div>', unsafe_allow_html=True)
+    if len(rows) > limit:
+        st.caption(f"Showing {limit} of {len(rows)} matching orders.")
+
+
+def render_focus_cards(queue_count: int, low_stock_count: int) -> None:
+    st.markdown(
+        '<div class="focus-stack">'
+        '<div class="focus-card">'
+        f'<div class="focus-card-value">{queue_count}</div>'
+        '<div class="section-title">Queue backlog</div>'
+        '<div class="section-subtitle">Warehouse intake events waiting for acknowledgement.</div>'
+        '</div>'
+        '<div class="focus-card">'
+        f'<div class="focus-card-value">{low_stock_count}</div>'
+        '<div class="section-title">Inventory posture</div>'
+        '<div class="section-subtitle">Products at or below the preferred stock threshold.</div>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def chart_layout(fig, *, height: int = 330):
+    fig.update_layout(
+        height=height,
+        margin=dict(l=10, r=18, t=44, b=18),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(255,255,255,0)",
+        font=dict(color="#111827", size=12),
+        title=dict(text=""),
+        title_font=dict(size=16, color="#111827"),
+        showlegend=True,
+    )
+    return fig
+
+
+def render_status_breakdown(status_mix, total_orders: int) -> None:
+    if status_mix.empty:
+        st.info("No status data available.")
+        return
+    rows = status_mix.sort_values("orders", ascending=False).to_dict(orient="records")
+    items: list[str] = []
+    for row in rows:
+        count = int(row["orders"])
+        percent = (count / total_orders * 100) if total_orders else 0
+        items.append(
+            '<div class="status-row">'
+            f'<div class="order-card-head"><div class="row-title">{escape(row["status"])}</div>'
+            f'<div class="row-number">{count} orders</div></div>'
+            f'<div class="progress-track"><div class="progress-bar" style="width:{percent:.1f}%;"></div></div>'
+            f'<div class="row-note">{percent:.1f}% of visible orders</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="status-breakdown">{"".join(items)}</div>', unsafe_allow_html=True)
+
+
+def render_region_rows(rows: list[dict], *, value_key: str = "orders") -> None:
+    if not rows:
+        st.info("No region data available.")
+        return
+    items: list[str] = []
+    for row in rows:
+        value = currency(row[value_key]) if value_key == "revenue" else f'{int(row[value_key])} orders'
+        note = currency(row["revenue"]) if "revenue" in row and value_key != "revenue" else "Visible region scope"
+        items.append(
+            '<div class="region-row">'
+            f'<div><div class="row-title">{escape(row["region_label"])}</div>'
+            f'<div class="row-note">{escape(note)}</div></div>'
+            f'<div class="row-number">{escape(value)}</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="region-list">{"".join(items)}</div>', unsafe_allow_html=True)
+
+
+def render_trend_rows(trend_frame) -> None:
+    if trend_frame.empty:
+        st.info("No order trend data available.")
+        return
+    rows = trend_frame.sort_values("created_date", ascending=False).head(6).to_dict(orient="records")
+    items: list[str] = []
+    for row in rows:
+        order_count = int(row["orders"])
+        order_label = "order" if order_count == 1 else "orders"
+        items.append(
+            '<div class="region-row">'
+            f'<div><div class="row-title">{escape(str(row["created_date"]))}</div>'
+            f'<div class="row-note">{currency(row["revenue"])} booked revenue</div></div>'
+            f'<div class="row-number">{order_count} {order_label}</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="region-list">{"".join(items)}</div>', unsafe_allow_html=True)
+
+
+def render_h3_rows(rows: list[dict]) -> None:
+    if not rows:
+        st.info("No H3 cells available.")
+        return
+    items: list[str] = []
+    for row in rows:
+        items.append(
+            '<div class="h3-row">'
+            f'<div><div class="row-title">{escape(row["region_label"])}</div>'
+            f'<div class="row-note">{escape(row["h3_region"])}</div></div>'
+            f'<div class="row-number">{int(row["orders"])} orders</div>'
+            f'<div class="row-number">{currency(row["revenue"])}</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="h3-list">{"".join(items)}</div>', unsafe_allow_html=True)
+
+
+def product_stock_pill(product) -> str:
+    if not product.is_active:
+        return '<span class="mini-pill is-muted">Inactive</span>'
+    if product.stock_quantity <= 10:
+        return '<span class="mini-pill is-warning">Low stock</span>'
+    return '<span class="mini-pill">Active</span>'
+
+
+def render_product_cards(products: list, *, limit: int | None = None) -> None:
+    if not products:
+        st.info("No products match the current filters.")
+        return
+    visible = products[:limit] if limit else products
+    cards: list[str] = []
+    for product in visible:
+        cards.append(
+            '<div class="product-list-card">'
+            '<div class="product-card-top">'
+            f'<div><div class="order-title">{escape(product.name)}</div>'
+            f'<div class="order-subtitle">{escape(product.sku)} · {escape(product.category)}</div></div>'
+            f'{product_stock_pill(product)}'
+            '</div>'
+            '<div class="product-meta-grid">'
+            f'<div class="order-field"><div class="order-field-label">Price</div><div class="order-field-value">{currency(product.price)}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Stock</div><div class="order-field-value">{product.stock_quantity} units</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Material</div><div class="order-field-value">{escape(product.material)}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Size</div><div class="order-field-value">{escape(product.dimensions)}</div></div>'
+            '</div>'
+            f'<div class="row-note" style="margin-top:0.75rem;">{escape(product.description)}</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="product-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
+    if limit and len(products) > limit:
+        st.caption(f"Showing {limit} of {len(products)} products.")
+
+
+def queue_status_pill(status: str) -> str:
+    if status == "pending":
+        return '<span class="mini-pill is-warning">pending</span>'
+    if status == "failed":
+        return '<span class="mini-pill is-danger">failed</span>'
+    return '<span class="mini-pill">processed</span>'
+
+
+def render_event_cards(events: list[dict], *, limit: int = 10) -> None:
+    if not events:
+        st.info("No queue events match the selected status.")
+        return
+    cards: list[str] = []
+    for event in events[:limit]:
+        cards.append(
+            '<div class="event-card">'
+            '<div class="event-card-top">'
+            f'<div><div class="order-title">#{event["id"]} · {escape(event["order_number"])}</div>'
+            f'<div class="order-subtitle">{escape(event["event_type"])} · {escape(event["region_label"])}</div></div>'
+            f'{queue_status_pill(event["status"])}'
+            '</div>'
+            '<div class="event-meta-grid">'
+            f'<div class="order-field"><div class="order-field-label">Order status</div><div class="order-field-value">{escape(event["order_status"])}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">City</div><div class="order-field-value">{escape(event["city"])}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Value</div><div class="order-field-value">{currency(event["total_amount"])}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Created</div><div class="order-field-value">{escape(format_timestamp(event["created_at"]))}</div></div>'
+            '</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="event-list">{"".join(cards)}</div>', unsafe_allow_html=True)
+    if len(events) > limit:
+        st.caption(f"Showing {limit} of {len(events)} queue events.")
+
+
+def render_audit_cards(logs: list[dict], *, limit: int = 12) -> None:
+    if not logs:
+        st.info("No audit entries match the selected filters.")
+        return
+    cards: list[str] = []
+    for log in logs[:limit]:
+        cards.append(
+            '<div class="audit-card">'
+            '<div class="audit-card-top">'
+            f'<div><div class="order-title">{escape(log["action"])}</div>'
+            f'<div class="order-subtitle">{escape(format_timestamp(log["created_at"]))}</div></div>'
+            f'<span class="mini-pill is-muted">{escape(log["entity_type"])}</span>'
+            '</div>'
+            '<div class="audit-meta-grid">'
+            f'<div class="order-field"><div class="order-field-label">Actor</div><div class="order-field-value">{escape(log["actor"])}</div></div>'
+            f'<div class="order-field"><div class="order-field-label">Entity ID</div><div class="order-field-value">{escape(log["entity_id"])}</div></div>'
+            '</div>'
+            '</div>'
+        )
+    st.markdown(f'<div class="audit-list">{"".join(cards)}</div>', unsafe_allow_html=True)
+    if len(logs) > limit:
+        st.caption(f"Showing {limit} of {len(logs)} audit entries.")
+
+
+def render_details_payload(details: dict) -> None:
+    if not details:
+        st.info("This audit entry does not include additional details.")
+        return
+    formatted_details = {
+        key: json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else value
+        for key, value in details.items()
+    }
+    rows = "".join(
+        '<div class="detail-row">'
+        f'<div class="row-title">{escape(str(key))}</div>'
+        f'<div class="row-note">{escape(str(value))}</div>'
+        '</div>'
+        for key, value in formatted_details.items()
+    )
+    st.markdown(f'<div class="detail-list">{rows}</div>', unsafe_allow_html=True)
 
 
 def render_auth_view() -> None:
@@ -268,39 +531,15 @@ def render_admin_overview(user) -> None:
         with metrics[3]:
             render_metric_card("Low stock", str(len(low_stock)), "SKUs at or below 10 units")
 
+        render_gap()
         left, right = st.columns([1.1, 0.9], gap="large")
         with left:
             render_section_title("Recent activity", "Latest orders", "The newest commercial orders across every region.")
             recent_orders = order_service.list_orders(session, user, include_cancelled=True)[:8]
-            st.dataframe(
-                [
-                    {
-                        "Order": row["order_number"],
-                        "Customer": row["customer_name"],
-                        "Product": row["product_name"],
-                        "Status": row["status"],
-                        "Region": row["region_label"],
-                    }
-                    for row in recent_orders
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
+            render_order_cards(recent_orders, limit=8)
         with right:
             render_section_title("Immediate focus", "Operational priorities", "Items that usually require administrative attention.")
-            st.markdown(
-                f"""
-                <div class="surface-card" style="margin-bottom:0.8rem;">
-                    <div class="section-title">Queue backlog</div>
-                    <div class="section-subtitle">{queue["pending_events"]} pending warehouse events require acknowledgement.</div>
-                </div>
-                <div class="surface-card" style="margin-bottom:0.8rem;">
-                    <div class="section-title">Inventory posture</div>
-                    <div class="section-subtitle">{len(low_stock)} products are currently below the preferred stock threshold.</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            render_focus_cards(queue["pending_events"], len(low_stock))
             render_shortcuts(["dashboard", "orders", "catalog", "fulfillment"], user.role)
 
 
@@ -329,22 +568,11 @@ def render_warehouse_overview(user) -> None:
         with metrics[3]:
             render_metric_card("Revenue", currency(metrics_payload["revenue"]), "Booked value within this region")
 
+        render_gap()
         left, right = st.columns([1.1, 0.9], gap="large")
         with left:
             render_section_title("Backlog", "Regional order queue", "Orders currently visible inside this assigned region.")
-            st.dataframe(
-                [
-                    {
-                        "Order": row["order_number"],
-                        "Product": row["product_name"],
-                        "Status": row["status"],
-                        "City": row["city"],
-                    }
-                    for row in active_orders[:10]
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
+            render_order_cards(active_orders[:10], limit=10, show_customer=False)
         with right:
             render_section_title("Next actions", "Operational shortcuts", "Move directly into queue processing or analytics.")
             render_shortcuts(["orders", "fulfillment", "analytics", "profile"], user.role)
@@ -381,47 +609,19 @@ def render_dashboard_view(user) -> None:
         with metrics[3]:
             render_metric_card("Delivered", f"{metrics_payload['delivered_rate']:.1f}%", "Delivered order rate")
 
-        charts = st.columns(2, gap="large")
-        with charts[0]:
-            if not orders_trend.empty:
-                fig = px.area(
-                    orders_trend,
-                    x="created_date",
-                    y="orders",
-                    title="Orders over time",
-                    color_discrete_sequence=["#4F46E5"],
-                )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
-        with charts[1]:
-            if not status_mix.empty:
-                fig = px.pie(
-                    status_mix,
-                    values="orders",
-                    names="status",
-                    title="Status distribution",
-                    hole=0.45,
-                    color_discrete_sequence=["#4F46E5", "#06B6D4", "#818CF8", "#22C55E", "#F59E0B", "#EF4444", "#A855F7"],
-                )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+        insight_columns = st.columns(2, gap="large")
+        with insight_columns[0]:
+            render_section_title("Flow", "Recent order flow", "Newest daily order windows with booked value.")
+            render_trend_rows(orders_trend)
+        with insight_columns[1]:
+            render_section_title("Lifecycle", "Status distribution", "Order lifecycle mix across the current operational scope.")
+            render_status_breakdown(status_mix, int(metrics_payload["orders"]))
 
+        render_gap()
         lower = st.columns([0.95, 1.05], gap="large")
         with lower[0]:
             render_section_title("Inventory", "Low-stock products", "Products that may constrain new order intake.")
-            st.dataframe(
-                [
-                    {
-                        "SKU": product.sku,
-                        "Product": product.name,
-                        "Stock": product.stock_quantity,
-                        "Category": product.category,
-                    }
-                    for product in low_stock
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
+            render_product_cards(low_stock, limit=8)
         with lower[1]:
             render_section_title("Exports", "Data extracts", "Download the current order, catalog, and audit datasets.")
             export_cols = st.columns(3, gap="small")
@@ -684,21 +884,8 @@ def render_orders_view(user) -> None:
             st.info("No orders match the selected filters.")
             return
 
-        st.dataframe(
-            [
-                {
-                    "Order": row["order_number"],
-                    "Customer": row["customer_name"],
-                    "Product": row["product_name"],
-                    "Status": row["status"],
-                    "Region": row["region_label"],
-                    "Total": currency(row["total_amount"]),
-                }
-                for row in rows
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
+        render_section_title("Order queue", "Matching orders", "Cards show the current filter results without hiding key details in a wide table.")
+        render_order_cards(rows, limit=6, show_customer=user.role != ROLE_CUSTOMER)
 
         selection_map = {f"{row['order_number']} · {row['product_name']} · {row['status']}": row["id"] for row in rows}
         selected_label = st.selectbox("Inspect order", list(selection_map.keys()))
@@ -804,7 +991,8 @@ def render_catalog_view(user) -> None:
 
         export_path, export_payload = product_service.export_products_json(session)
         st.download_button("Export products.json", data=export_payload, file_name=export_path.name, mime="application/json")
-        st.dataframe(product_service.product_rows(products), use_container_width=True, hide_index=True)
+        render_section_title("Products", "Catalog results", "Current product matches with price, stock, material, and catalog status.")
+        render_product_cards(products, limit=12)
 
         create_tab, edit_tab = st.tabs(["Create product", "Edit product"])
         with create_tab:
@@ -900,21 +1088,8 @@ def render_fulfillment_view(user) -> None:
 
         status_filter = st.selectbox("Queue status", ["All", "pending", "processed", "failed"])
         events = warehouse_service.list_events(session, user, event_status=status_filter, limit=200)
-        st.dataframe(
-            [
-                {
-                    "Event ID": row["id"],
-                    "Order": row["order_number"],
-                    "Event": row["event_type"],
-                    "Region": row["region_label"],
-                    "Order status": row["order_status"],
-                    "Queue status": row["status"],
-                }
-                for row in events
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
+        render_section_title("Queue", "Warehouse queue", "Incoming order-created events and processing state.")
+        render_event_cards(events, limit=10)
 
         if events:
             selection_map = {f"#{row['id']} · {row['order_number']} · {row['status']}": row["id"] for row in events}
@@ -956,20 +1131,7 @@ def render_fulfillment_view(user) -> None:
             for row in order_service.list_orders(session, user, include_cancelled=False)
             if row["status"] != "Delivered"
         ][:20]
-        st.dataframe(
-            [
-                {
-                    "Order": row["order_number"],
-                    "Product": row["product_name"],
-                    "Status": row["status"],
-                    "City": row["city"],
-                    "Region": row["region_label"],
-                }
-                for row in backlog
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
+        render_order_cards(backlog, limit=8, show_customer=True, empty_message="No active backlog in the current scope.")
 
 
 def render_analytics_view(user) -> None:
@@ -997,58 +1159,71 @@ def render_analytics_view(user) -> None:
         with metric_cols[3]:
             render_metric_card("Delivered rate", f"{metrics_payload['delivered_rate']:.1f}%", "Share of delivered orders")
 
+        render_gap()
         top_left, top_right = st.columns(2, gap="large")
         with top_left:
-            if not orders_region.empty:
-                fig = px.bar(
-                    orders_region,
-                    x="region_label",
-                    y="orders",
-                    title="Orders per region",
-                    color_discrete_sequence=["#4F46E5"],
-                )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            with st.container(border=True):
+                render_section_title("Regional density", "Orders by region", "Highest-volume fulfillment regions.")
+                if not orders_region.empty:
+                    chart_frame = orders_region.head(8).sort_values("orders", ascending=True)
+                    fig = px.bar(
+                        chart_frame,
+                        x="orders",
+                        y="region_label",
+                        orientation="h",
+                        text="orders",
+                        color_discrete_sequence=["#2563EB"],
+                    )
+                    fig.update_traces(textposition="outside", cliponaxis=False)
+                    fig.update_xaxes(title=None, showgrid=True, gridcolor="#E5E7EB")
+                    fig.update_yaxes(title=None)
+                    chart_layout(fig)
+                    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+                else:
+                    st.info("No order volume data available.")
         with top_right:
-            if not revenue_region.empty:
-                fig = px.bar(
-                    revenue_region,
-                    x="region_label",
-                    y="revenue",
-                    title="Revenue per region",
-                    color_discrete_sequence=["#06B6D4"],
-                )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            with st.container(border=True):
+                render_section_title("Commercial value", "Revenue by region", "Booked order value by visible region.")
+                if not revenue_region.empty:
+                    chart_frame = revenue_region.head(8).sort_values("revenue", ascending=True)
+                    fig = px.bar(
+                        chart_frame,
+                        x="revenue",
+                        y="region_label",
+                        orientation="h",
+                        color_discrete_sequence=["#0891B2"],
+                    )
+                    fig.update_xaxes(title=None, tickprefix="$", showgrid=True, gridcolor="#E5E7EB")
+                    fig.update_yaxes(title=None)
+                    chart_layout(fig)
+                    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+                else:
+                    st.info("No revenue data available.")
 
         middle_left, middle_right = st.columns(2, gap="large")
         with middle_left:
-            if not status_mix.empty:
-                fig = px.pie(
-                    status_mix,
-                    values="orders",
-                    names="status",
-                    title="Status distribution",
-                    hole=0.35,
-                    color_discrete_sequence=["#4F46E5", "#06B6D4", "#818CF8", "#22C55E", "#F59E0B", "#EF4444", "#A855F7"],
-                )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            render_section_title("Lifecycle", "Status distribution", "Operational mix across the current scope.")
+            render_status_breakdown(status_mix, int(metrics_payload["orders"]))
         with middle_right:
+            render_section_title("Trend", "Orders over time", "Daily order flow for the visible scope.")
             if not orders_trend.empty:
                 fig = px.line(
                     orders_trend,
                     x="created_date",
                     y="orders",
-                    title="Orders over time",
                     markers=True,
                     color_discrete_sequence=["#4F46E5"],
                 )
-                fig.update_layout(margin=dict(l=10, r=10, t=50, b=10), paper_bgcolor="rgba(0,0,0,0)")
+                fig.update_traces(line=dict(width=3), marker=dict(size=7))
+                fig.update_xaxes(title=None, showgrid=False)
+                fig.update_yaxes(title=None, dtick=1, showgrid=True, gridcolor="#E5E7EB")
+                chart_layout(fig, height=300)
                 st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+            else:
+                st.info("No order trend data available.")
 
         render_section_title("Regions", "Top regions", "Highest-volume regions in the current analytical scope.")
-        st.dataframe(top_regions, use_container_width=True, hide_index=True)
+        render_region_rows(top_regions.to_dict(orient="records"))
 
         if not frame.empty:
             region_detail = (
@@ -1057,7 +1232,7 @@ def render_analytics_view(user) -> None:
                 .sort_values("orders", ascending=False)
             )
             render_section_title("H3 detail", "Region reference", "Exact H3 cells and aggregate order value.")
-            st.dataframe(region_detail, use_container_width=True, hide_index=True)
+            render_h3_rows(region_detail.head(12).to_dict(orient="records"))
 
 
 def render_audit_view(user) -> None:
@@ -1100,24 +1275,13 @@ def render_audit_view(user) -> None:
         )
         export_path, export_payload = audit_service.export_logs_json(session)
         st.download_button("Export logs.json", data=export_payload, file_name=export_path.name, mime="application/json")
-        st.dataframe(
-            [
-                {
-                    "Timestamp": row["created_at"],
-                    "Actor": row["actor"],
-                    "Action": row["action"],
-                    "Entity": row["entity_type"],
-                    "Entity ID": row["entity_id"],
-                }
-                for row in logs
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
+        render_section_title("Audit entries", "Recent activity", "Filtered platform actions with actor and entity context.")
+        render_audit_cards(logs, limit=12)
         if logs:
             log_map = {f"{row['created_at']} · {row['actor']} · {row['action']}": row for row in logs[:100]}
             selected_label = st.selectbox("Inspect log entry", list(log_map.keys()))
-            st.json(log_map[selected_label]["details"])
+            render_section_title("Details", "Selected log details", "Key fields recorded with this platform action.")
+            render_details_payload(log_map[selected_label]["details"])
 
 
 def render_profile_view(user) -> None:

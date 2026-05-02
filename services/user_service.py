@@ -4,10 +4,12 @@ from datetime import timedelta
 
 from sqlmodel import Session, select
 
-from core.config import settings
+from core.config import ROLE_ADMIN, ROLE_CUSTOMER, ROLE_WAREHOUSE, settings
 from core.security import generate_session_token, hash_password, hash_token, verify_password
 from core.utils import AuthenticationError, NotFoundError, ValidationError, utcnow
 from models.user import User, UserSession
+
+VALID_ROLES = {ROLE_ADMIN, ROLE_CUSTOMER, ROLE_WAREHOUSE}
 
 
 def normalize_username(username: str) -> str:
@@ -52,6 +54,12 @@ def create_user(
         raise ValidationError("Username must contain at least 3 characters.")
     if not full_name.strip():
         raise ValidationError("Full name is required.")
+    if role not in VALID_ROLES:
+        raise ValidationError("Role is not supported.")
+    if role == ROLE_WAREHOUSE and not assigned_region:
+        raise ValidationError("Warehouse managers must be assigned to an H3 region.")
+    if role != ROLE_WAREHOUSE and assigned_region:
+        raise ValidationError("Only warehouse managers can have an assigned region.")
     if len(password) < 8:
         raise ValidationError("Password must be at least 8 characters.")
     existing = session.exec(select(User).where(User.username == normalized)).first()
@@ -122,6 +130,8 @@ def end_user_session(session: Session, token: str) -> None:
 
 
 def update_profile(session: Session, actor: User, *, full_name: str) -> User:
+    if not full_name.strip():
+        raise ValidationError("Full name is required.")
     actor.full_name = full_name.strip()
     actor.updated_at = utcnow()
     session.add(actor)
