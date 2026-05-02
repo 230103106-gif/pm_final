@@ -1,6 +1,6 @@
 # Geo-Optimized Furniture Order Management System
 
-A production-style multi-page Streamlit application for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and an audit trail designed to feel like a real internal SaaS tool rather than a toy demo.
+A multi-page Streamlit application for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
 
 ## What It Does
 
@@ -11,7 +11,7 @@ A production-style multi-page Streamlit application for furniture order intake, 
 - Persists all users, products, orders, warehouse events, sessions, and audit logs in SQLite
 - Simulates an event-driven warehouse queue when orders are created
 - Provides exportable operational data: `orders.csv`, `products.json`, and `logs.json`
-- Includes seeded demo data for immediate exploration
+- Includes initial operational data for immediate use
 
 ## Architecture
 
@@ -86,7 +86,7 @@ Data Layer
 
 - BCrypt password hashing
 - Persistent session records in SQLite
-- RBAC for admin, customer, and warehouse manager personas
+- RBAC for admin, customer, and warehouse manager roles
 - ABAC for warehouse users based on `order.h3_region == user.assigned_region`
 - Audit logging for logins, logouts, product changes, order creation, status transitions, and warehouse processing
 
@@ -100,7 +100,7 @@ The app auto-seeds on first run with:
 - Multiple US cities with H3 region assignment
 - Warehouse queue records and audit logs
 
-## Demo Credentials
+## Seed Accounts
 
 - `admin` / `Admin@123`
 - `customer` / `Customer@123`

@@ -75,6 +75,32 @@ ROLE_LABELS = {
     ROLE_WAREHOUSE: "Warehouse Manager",
 }
 
+ROLE_NAVIGATION = {
+    ROLE_ADMIN: [
+        {"path": "app.py", "label": "Overview", "icon": "🏠"},
+        {"path": "pages/4_Admin_Dashboard.py", "label": "Dashboard", "icon": "📈"},
+        {"path": "pages/5_Order_Management.py", "label": "Orders", "icon": "📦"},
+        {"path": "pages/6_Products.py", "label": "Catalog", "icon": "🪑"},
+        {"path": "pages/7_Warehouse.py", "label": "Fulfillment", "icon": "🏭"},
+        {"path": "pages/8_Analytics.py", "label": "Analytics", "icon": "🗺️"},
+        {"path": "pages/9_Audit.py", "label": "Audit Trail", "icon": "📜"},
+        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+    ],
+    ROLE_CUSTOMER: [
+        {"path": "app.py", "label": "Overview", "icon": "🏠"},
+        {"path": "pages/2_Shop.py", "label": "Catalog", "icon": "🛒"},
+        {"path": "pages/3_My_Orders.py", "label": "Orders", "icon": "📋"},
+        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+    ],
+    ROLE_WAREHOUSE: [
+        {"path": "app.py", "label": "Overview", "icon": "🏠"},
+        {"path": "pages/5_Order_Management.py", "label": "Orders", "icon": "📦"},
+        {"path": "pages/7_Warehouse.py", "label": "Fulfillment", "icon": "🏭"},
+        {"path": "pages/8_Analytics.py", "label": "Analytics", "icon": "🗺️"},
+        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+    ],
+}
+
 ROLE_PERMISSIONS = {
     ROLE_ADMIN: {
         "dashboard.view",

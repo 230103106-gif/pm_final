@@ -67,8 +67,8 @@ with get_session() as session:
 
     st.subheader("Operational context")
     if current.role == "admin":
-        st.info("Administrator accounts have full access to dashboards, products, audit logs, exports, and all regional orders.")
+        st.info("This account manages enterprise-wide catalog, order, analytics, and audit controls.")
     elif current.role == "warehouse_manager":
-        st.info("Warehouse managers are limited to orders and events whose H3 region matches their assigned operational region.")
+        st.info("This account is restricted to fulfillment actions and analytics within its assigned service region.")
     else:
-        st.info("Customer accounts can browse the catalog, place orders, review personal orders, and cancel only early-stage requests.")
+        st.info("This account can browse the catalog, place orders, review order progress, and cancel early-stage requests.")

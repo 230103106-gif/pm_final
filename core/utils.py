@@ -13,6 +13,7 @@ from core.config import (
     ROLE_ADMIN,
     ROLE_CUSTOMER,
     ROLE_LABELS,
+    ROLE_NAVIGATION,
     ROLE_WAREHOUSE,
     SEED_DATA_PATH,
     STATUS_COLORS,
@@ -58,12 +59,12 @@ def currency(amount: float) -> str:
     return f"${amount:,.2f}"
 
 
-def configure_page(title: str, icon: str = "🪑") -> None:
+def configure_page(title: str, icon: str = "🪑", sidebar_state: str = "expanded") -> None:
     st.set_page_config(
         page_title=f"{title} | {settings.app_name}",
         page_icon=icon,
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state=sidebar_state,
     )
 
 
@@ -82,6 +83,10 @@ def inject_styles() -> None:
             .block-container {
                 padding-top: 1.4rem;
                 padding-bottom: 2rem;
+            }
+            [data-testid="stSidebarNav"],
+            [data-testid="stSidebarNavSeparator"] {
+                display: none !important;
             }
             .hero-card, .metric-card, .surface-card, .table-card {
                 border: 1px solid rgba(24, 34, 45, 0.08);
@@ -161,6 +166,14 @@ def inject_styles() -> None:
                 padding: 0.9rem 1rem;
                 margin-bottom: 0.9rem;
             }
+            .sidebar-nav-title {
+                color: #5b6875;
+                font-size: 0.76rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                font-weight: 700;
+                margin: 0.4rem 0 0.6rem 0.1rem;
+            }
             .detail-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -190,11 +203,17 @@ def inject_styles() -> None:
     )
 
 
-def initialize_page(title: str, icon: str = "🪑", allowed_roles: list[str] | None = None, anonymous: bool = False):
+def initialize_page(
+    title: str,
+    icon: str = "🪑",
+    allowed_roles: list[str] | None = None,
+    anonymous: bool = False,
+    sidebar_state: str = "expanded",
+):
     from core.auth import ensure_authenticated, get_current_user
     from core.database import init_db
 
-    configure_page(title, icon)
+    configure_page(title, icon, sidebar_state=sidebar_state)
     inject_styles()
     init_db()
     user = get_current_user() if anonymous else ensure_authenticated(allowed_roles)
@@ -205,43 +224,26 @@ def initialize_page(title: str, icon: str = "🪑", allowed_roles: list[str] | N
 def render_sidebar(user) -> None:
     import core.auth as auth
 
+    if not user:
+        return
+
     with st.sidebar:
         st.markdown(
             f"""
             <div class="sidebar-user">
-                <div class="page-eyebrow">Geo Furniture Ops</div>
-                <div style="font-size:1.1rem;font-weight:700;color:#152534;">{user.full_name if user else "Guest Access"}</div>
-                <div class="mini-note">{ROLE_LABELS.get(user.role, "Sign in required") if user else "Secure workspace"}</div>
+                <div class="page-eyebrow">Furniture Operations</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#152534;">{user.full_name}</div>
+                <div class="mini-note">{ROLE_LABELS.get(user.role, "Account")}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        if user:
-            if user.role == ROLE_ADMIN:
-                st.page_link("app.py", label="Workspace Home", icon="🏠")
-                st.page_link("pages/4_Admin_Dashboard.py", label="Admin Dashboard", icon="📈")
-                st.page_link("pages/5_Order_Management.py", label="Order Management", icon="📦")
-                st.page_link("pages/6_Products.py", label="Products", icon="🪑")
-                st.page_link("pages/7_Warehouse.py", label="Warehouse Queue", icon="🏭")
-                st.page_link("pages/8_Analytics.py", label="Analytics", icon="🗺️")
-                st.page_link("pages/9_Audit.py", label="Audit Logs", icon="📜")
-                st.page_link("pages/10_Settings.py", label="Settings", icon="⚙️")
-            elif user.role == ROLE_CUSTOMER:
-                st.page_link("app.py", label="Workspace Home", icon="🏠")
-                st.page_link("pages/2_Shop.py", label="Shop", icon="🛒")
-                st.page_link("pages/3_My_Orders.py", label="My Orders", icon="📋")
-                st.page_link("pages/10_Settings.py", label="Settings", icon="⚙️")
-            elif user.role == ROLE_WAREHOUSE:
-                st.page_link("app.py", label="Workspace Home", icon="🏠")
-                st.page_link("pages/5_Order_Management.py", label="Regional Orders", icon="📦")
-                st.page_link("pages/7_Warehouse.py", label="Warehouse Queue", icon="🏭")
-                st.page_link("pages/8_Analytics.py", label="Regional Analytics", icon="🗺️")
-                st.page_link("pages/10_Settings.py", label="Settings", icon="⚙️")
-            if st.button("Log out", type="secondary", use_container_width=True):
-                auth.logout_current_user()
-                st.switch_page("pages/1_Login.py")
-        else:
-            st.page_link("pages/1_Login.py", label="Login", icon="🔐")
+        st.markdown('<div class="sidebar-nav-title">Navigation</div>', unsafe_allow_html=True)
+        for item in ROLE_NAVIGATION.get(user.role, []):
+            st.page_link(item["path"], label=item["label"], icon=item["icon"])
+        if st.button("Log out", type="secondary", use_container_width=True):
+            auth.logout_current_user()
+            st.switch_page("pages/1_Login.py")
 
 
 def render_page_header(eyebrow: str, title: str, subtitle: str) -> None:

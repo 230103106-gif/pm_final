@@ -98,6 +98,22 @@ def test_h3_region_assignment_matches_coordinates(seeded_database):
         assert order.h3_region == h3.latlng_to_cell(latitude, longitude, order_service.settings.h3_resolution)
 
 
+def test_customer_account_registration_creates_active_customer(seeded_database):
+    with get_session() as session:
+        created = user_service.create_user(
+            session,
+            username="new_customer",
+            full_name="New Customer",
+            password="StrongPass123",
+            role="customer",
+        )
+
+        resolved = session.exec(select(User).where(User.username == "new_customer")).first()
+        assert resolved is not None
+        assert created.role == "customer"
+        assert resolved.is_active is True
+
+
 def test_warehouse_rbac_blocks_out_of_region_orders(seeded_database):
     with get_session() as session:
         warehouse_user = session.exec(select(User).where(User.username == "warehouse")).first()

@@ -7,12 +7,12 @@ from core.utils import currency, initialize_page, render_metric_card, render_pag
 from services import analytics_service, order_service, warehouse_service
 
 
-user = initialize_page("Workspace Home", icon="🪑", anonymous=True)
+user = initialize_page("Overview", icon="🪑", anonymous=True)
 
 render_page_header(
-    "Operations Workspace",
-    "Furniture fulfillment built around real regions, real stock, and real workflow gates.",
-    "Manage customer demand, warehouse intake, and delivery lifecycle progress from a single Streamlit control plane.",
+    "Order Operations",
+    "Coordinate order intake, catalog control, warehouse execution, and regional analytics from one platform.",
+    "The system connects commercial ordering workflows with fulfillment operations, inventory governance, and auditable process controls.",
 )
 
 if not user:
@@ -21,13 +21,13 @@ if not user:
         st.markdown(
             """
             <div class="surface-card">
-                <h3 style="margin-top:0;">What this workspace includes</h3>
-                <p class="mini-note">Customer ordering, order lifecycle enforcement, H3 geospatial assignment, warehouse queue processing, audit logging, exports, and role-restricted analytics.</p>
+                <h3 style="margin-top:0;">Platform capabilities</h3>
+                <p class="mini-note">Manage catalog ordering, warehouse intake, regional delivery coverage, audit controls, and operational reporting within a single secure workflow.</p>
                 <ul>
-                    <li>Persistent SQLite storage with seeded demo data</li>
-                    <li>RBAC plus region-based ABAC checks on order access</li>
-                    <li>Warehouse event queue that confirms intake before downstream fulfillment</li>
-                    <li>Operations dashboards and regional reporting with Plotly</li>
+                    <li>Persistent order ledger with controlled status transitions</li>
+                    <li>Role-based access with region-restricted warehouse actions</li>
+                    <li>Event queue intake for fulfillment processing</li>
+                    <li>Regional analytics, exports, and audit-ready records</li>
                 </ul>
             </div>
             """,
@@ -39,10 +39,9 @@ if not user:
         st.markdown(
             """
             <div class="surface-card">
-                <h3 style="margin-top:0;">Demo credentials</h3>
-                <p><strong>admin</strong> / <code>Admin@123</code></p>
-                <p><strong>customer</strong> / <code>Customer@123</code></p>
-                <p><strong>warehouse</strong> / <code>Warehouse@123</code></p>
+                <h3 style="margin-top:0;">Access options</h3>
+                <p class="mini-note">Sign in with an existing account or create a customer account to begin placing orders.</p>
+                <p class="mini-note">Administrative and warehouse accounts are issued internally.</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -88,8 +87,8 @@ else:
                     st.info("No orders yet. Start with the shop to create your first request.")
             with right:
                 st.subheader("Next actions")
-                st.page_link("pages/2_Shop.py", label="Create a new order", icon="🛒")
-                st.page_link("pages/3_My_Orders.py", label="Review existing orders", icon="📋")
+                st.page_link("pages/2_Shop.py", label="Open catalog", icon="🛒")
+                st.page_link("pages/3_My_Orders.py", label="Review orders", icon="📋")
         else:
             metrics_payload = analytics_service.kpis(session, user)
             queue = warehouse_service.queue_summary(session, user)

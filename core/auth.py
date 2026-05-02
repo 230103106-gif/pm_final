@@ -62,8 +62,7 @@ def ensure_authenticated(allowed_roles: list[str] | None = None):
         st.switch_page("pages/1_Login.py")
         st.stop()
     if allowed_roles and user.role not in allowed_roles:
-        st.error("Your account does not have access to this workspace section.")
-        st.page_link(DEFAULT_PAGE_BY_ROLE[user.role], label="Open my default workspace")
+        st.switch_page(DEFAULT_PAGE_BY_ROLE[user.role])
         st.stop()
     return user
 

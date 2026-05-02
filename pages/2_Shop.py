@@ -8,11 +8,11 @@ from core.utils import ValidationError, currency, initialize_page, render_detail
 from services import order_service, product_service
 
 
-user = initialize_page("Shop", icon="🛒", allowed_roles=["customer", "admin", "warehouse_manager"])
+user = initialize_page("Catalog", icon="🛒", allowed_roles=["customer"])
 render_page_header(
-    "Customer Ordering",
-    "Browse furniture inventory and place delivery requests through a staged order workflow.",
-    "The order is not created until delivery details, quantity, and final confirmation all pass validation.",
+    "Order Catalog",
+    "Browse active inventory and place delivery orders with validated shipping details.",
+    "Order creation follows a controlled intake flow that checks product availability, address data, and confirmation before submission.",
 )
 
 if "shop_step" not in st.session_state:
@@ -32,10 +32,6 @@ with get_session() as session:
 
     products = product_service.list_products(session, category=selected_category, search=search_term)
     st.dataframe(product_service.product_rows(products), use_container_width=True, hide_index=True)
-
-    if user.role != "customer":
-        st.info("This page is in catalog preview mode for your role. Only customer accounts can submit new orders.")
-        st.stop()
 
     product_options = {f"{product.sku} · {product.name}": product.id for product in products}
     city_options = {city["name"]: city for city in order_service.city_catalog()}

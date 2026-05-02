@@ -48,6 +48,12 @@ def create_user(
     assigned_region: str | None = None,
 ) -> User:
     normalized = normalize_username(username)
+    if len(normalized) < 3:
+        raise ValidationError("Username must contain at least 3 characters.")
+    if not full_name.strip():
+        raise ValidationError("Full name is required.")
+    if len(password) < 8:
+        raise ValidationError("Password must be at least 8 characters.")
     existing = session.exec(select(User).where(User.username == normalized)).first()
     if existing:
         raise ValidationError("A user with that username already exists.")
