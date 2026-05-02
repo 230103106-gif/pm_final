@@ -4,6 +4,7 @@ import h3
 import pytest
 from sqlmodel import select
 
+from core import auth
 from core.database import get_session, init_db, reset_database_url, set_database_url
 from core.utils import AuthorizationError
 from models.product import Product
@@ -112,6 +113,19 @@ def test_customer_account_registration_creates_active_customer(seeded_database):
         assert resolved is not None
         assert created.role == "customer"
         assert resolved.is_active is True
+
+
+def test_browser_session_cookie_round_trip(seeded_database):
+    with get_session() as session:
+        user = session.exec(select(User).where(User.username == "customer")).first()
+        cookie_value = auth.build_browser_session_cookie(user, "opaque-session-token")
+        payload = auth.parse_browser_session_cookie(cookie_value)
+
+        assert payload is not None
+        assert payload["user_id"] == user.id
+        assert payload["username"] == "customer"
+        assert payload["role"] == "customer"
+        assert payload["session_token"] == "opaque-session-token"
 
 
 def test_warehouse_rbac_blocks_out_of_region_orders(seeded_database):

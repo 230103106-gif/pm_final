@@ -3,22 +3,13 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from functools import lru_cache
+from html import escape
 from typing import Any
 
 import h3
 import streamlit as st
 
-from core.config import (
-    DEFAULT_PAGE_BY_ROLE,
-    ROLE_ADMIN,
-    ROLE_CUSTOMER,
-    ROLE_LABELS,
-    ROLE_NAVIGATION,
-    ROLE_WAREHOUSE,
-    SEED_DATA_PATH,
-    STATUS_COLORS,
-    settings,
-)
+from core.config import SEED_DATA_PATH, STATUS_COLORS, settings
 
 
 class AppError(Exception):
@@ -59,7 +50,11 @@ def currency(amount: float) -> str:
     return f"${amount:,.2f}"
 
 
-def configure_page(title: str, icon: str = "🪑", sidebar_state: str = "expanded") -> None:
+def format_timestamp(value: datetime | None) -> str:
+    return value.strftime("%b %d, %Y %H:%M") if value else "Pending"
+
+
+def configure_page(title: str, icon: str = "🪑", sidebar_state: str = "collapsed") -> None:
     st.set_page_config(
         page_title=f"{title} | {settings.app_name}",
         page_icon=icon,
@@ -72,21 +67,40 @@ def inject_styles() -> None:
     st.markdown(
         """
         <style>
+            :root {
+                --primary: #4F46E5;
+                --primary-soft: #EEF2FF;
+                --secondary: #06B6D4;
+                --background: #F9FAFB;
+                --surface: rgba(255, 255, 255, 0.96);
+                --surface-alt: #F3F4F6;
+                --text: #111827;
+                --muted: #6B7280;
+                --border: rgba(79, 70, 229, 0.10);
+                --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+                --radius-xl: 28px;
+                --radius-lg: 22px;
+                --radius-md: 16px;
+            }
             .stApp {
                 background:
-                    radial-gradient(circle at top left, rgba(23, 98, 79, 0.10), transparent 28%),
-                    radial-gradient(circle at top right, rgba(24, 34, 45, 0.07), transparent 22%),
-                    linear-gradient(180deg, #f7f4ef 0%, #f2efe8 100%);
-                color: #18222d;
-                font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+                    radial-gradient(circle at top left, rgba(79, 70, 229, 0.09), transparent 22%),
+                    radial-gradient(circle at top right, rgba(6, 182, 212, 0.08), transparent 18%),
+                    linear-gradient(180deg, #F9FAFB 0%, #EEF2FF 100%);
+                color: var(--text);
+                font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
             }
             .block-container {
-                padding-top: 1.4rem;
-                padding-bottom: 2rem;
+                max-width: 1180px;
+                padding-top: 1rem;
+                padding-bottom: 7.5rem;
             }
+            section[data-testid="stSidebar"],
+            button[data-testid="collapsedControl"],
             [data-testid="stSidebarNav"],
             [data-testid="stSidebarNavSeparator"] {
                 display: none !important;
+                visibility: hidden !important;
             }
             header[data-testid="stHeader"],
             [data-testid="stToolbar"],
@@ -98,114 +112,289 @@ def inject_styles() -> None:
                 display: none !important;
                 visibility: hidden !important;
             }
-            .hero-card, .metric-card, .surface-card, .table-card {
-                border: 1px solid rgba(24, 34, 45, 0.08);
-                border-radius: 20px;
-                background: rgba(255, 255, 255, 0.92);
-                box-shadow: 0 18px 42px rgba(24, 34, 45, 0.08);
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                border-radius: var(--radius-md);
+            }
+            .hero-card,
+            .metric-card,
+            .surface-card,
+            .table-card,
+            .auth-card,
+            .product-card {
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                background: var(--surface);
+                box-shadow: var(--shadow);
             }
             .hero-card {
-                padding: 1.5rem 1.5rem 1.25rem 1.5rem;
-                background:
-                    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 240, 0.98)),
-                    rgba(255,255,255,0.94);
+                padding: 1.65rem 1.75rem;
+                margin-bottom: 1rem;
+            }
+            .topbar-card {
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                background: rgba(255, 255, 255, 0.84);
+                box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+                padding: 1rem 1.15rem;
+                margin-bottom: 1rem;
+                backdrop-filter: blur(10px);
             }
             .metric-card {
-                padding: 1rem 1.1rem;
-                min-height: 122px;
+                padding: 1.1rem 1.1rem 1rem 1.1rem;
+                min-height: 126px;
             }
             .metric-label {
-                color: #5b6875;
-                font-size: 0.84rem;
-                letter-spacing: 0.04em;
+                color: var(--muted);
+                font-size: 0.8rem;
                 text-transform: uppercase;
-                margin-bottom: 0.35rem;
+                letter-spacing: 0.08em;
+                font-weight: 700;
             }
             .metric-value {
-                font-size: 1.85rem;
+                color: var(--text);
+                font-size: 1.9rem;
+                line-height: 1.15;
                 font-weight: 700;
-                color: #12202b;
-                line-height: 1.2;
+                margin-top: 0.3rem;
             }
             .metric-note {
-                color: #415262;
+                color: var(--muted);
                 font-size: 0.92rem;
-                margin-top: 0.45rem;
+                margin-top: 0.42rem;
             }
             .page-eyebrow {
-                color: #17624f;
-                font-size: 0.82rem;
-                letter-spacing: 0.08em;
+                color: var(--secondary);
+                font-size: 0.8rem;
                 text-transform: uppercase;
+                letter-spacing: 0.1em;
                 font-weight: 700;
-                margin-bottom: 0.25rem;
+                margin-bottom: 0.35rem;
             }
             .page-title {
-                font-size: 2rem;
-                font-weight: 700;
-                color: #152534;
-                margin-bottom: 0.25rem;
+                color: var(--text);
+                font-size: 2.2rem;
+                line-height: 1.06;
+                font-weight: 800;
+                margin-bottom: 0.35rem;
             }
             .page-subtitle {
-                color: #4d5d6d;
+                color: var(--muted);
                 font-size: 1rem;
-                margin-bottom: 0;
+                margin: 0;
+                max-width: 860px;
             }
-            .surface-card, .table-card {
-                padding: 1rem 1.1rem;
+            .surface-card,
+            .table-card,
+            .auth-card,
+            .product-card {
+                padding: 1.15rem;
+            }
+            .section-kicker {
+                color: var(--secondary);
+                font-size: 0.78rem;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-weight: 700;
+                margin-bottom: 0.2rem;
+            }
+            .section-title {
+                color: var(--text);
+                font-size: 1.12rem;
+                font-weight: 700;
+                margin-bottom: 0.2rem;
+            }
+            .section-subtitle,
+            .mini-note {
+                color: var(--muted);
+                font-size: 0.92rem;
             }
             .status-pill {
                 display: inline-flex;
                 align-items: center;
-                gap: 0.4rem;
-                padding: 0.28rem 0.72rem;
+                justify-content: center;
+                gap: 0.35rem;
+                padding: 0.34rem 0.78rem;
                 border-radius: 999px;
                 color: white;
-                font-size: 0.84rem;
-                font-weight: 600;
-                line-height: 1.1;
-            }
-            .mini-note {
-                color: #5f6c79;
-                font-size: 0.88rem;
-            }
-            .sidebar-user {
-                border: 1px solid rgba(24, 34, 45, 0.08);
-                border-radius: 18px;
-                background: rgba(255, 255, 255, 0.86);
-                padding: 0.9rem 1rem;
-                margin-bottom: 0.9rem;
-            }
-            .sidebar-nav-title {
-                color: #5b6875;
-                font-size: 0.76rem;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
+                font-size: 0.82rem;
                 font-weight: 700;
-                margin: 0.4rem 0 0.6rem 0.1rem;
+                line-height: 1;
             }
             .detail-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-                gap: 0.9rem;
+                gap: 0.8rem;
                 margin-top: 0.8rem;
             }
             .detail-item {
-                border: 1px solid rgba(24, 34, 45, 0.07);
-                border-radius: 16px;
-                padding: 0.75rem 0.85rem;
-                background: rgba(247, 244, 239, 0.7);
+                border-radius: var(--radius-md);
+                border: 1px solid rgba(17, 24, 39, 0.06);
+                background: linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
+                padding: 0.8rem 0.9rem;
             }
             .detail-label {
-                color: #607180;
-                font-size: 0.78rem;
-                letter-spacing: 0.03em;
+                color: var(--muted);
+                font-size: 0.76rem;
                 text-transform: uppercase;
+                letter-spacing: 0.06em;
+                font-weight: 700;
             }
             .detail-value {
-                color: #172532;
-                font-weight: 600;
-                margin-top: 0.2rem;
+                color: var(--text);
+                font-weight: 700;
+                margin-top: 0.22rem;
+            }
+            .product-art {
+                min-height: 148px;
+                border-radius: 18px;
+                background:
+                    linear-gradient(140deg, rgba(79, 70, 229, 0.10), rgba(6, 182, 212, 0.12)),
+                    linear-gradient(180deg, #FFFFFF 0%, #EEF2FF 100%);
+                border: 1px solid rgba(79, 70, 229, 0.08);
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                padding: 1rem;
+                margin-bottom: 0.9rem;
+            }
+            .product-art-badge {
+                border-radius: 999px;
+                background: rgba(79, 70, 229, 0.12);
+                color: var(--primary);
+                font-size: 0.76rem;
+                font-weight: 700;
+                padding: 0.35rem 0.65rem;
+            }
+            .product-art-mark {
+                font-size: 2rem;
+                font-weight: 800;
+                color: rgba(17, 24, 39, 0.84);
+            }
+            .app-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                border-radius: 999px;
+                padding: 0.42rem 0.78rem;
+                background: rgba(79, 70, 229, 0.10);
+                color: var(--primary);
+                font-size: 0.84rem;
+                font-weight: 700;
+            }
+            .bottom-nav {
+                position: fixed;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: 18px;
+                width: min(960px, calc(100vw - 24px));
+                border-radius: 24px;
+                padding: 0.5rem;
+                background: rgba(17, 24, 39, 0.94);
+                box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(18px);
+                z-index: 99999;
+            }
+            .bottom-nav-grid {
+                display: grid;
+                gap: 0.45rem;
+            }
+            .bottom-nav-item {
+                text-decoration: none !important;
+                color: rgba(255, 255, 255, 0.72) !important;
+                border-radius: 18px;
+                padding: 0.75rem 0.45rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.28rem;
+                min-height: 68px;
+                transition: all 0.2s ease;
+                font-size: 0.78rem;
+                font-weight: 700;
+            }
+            .bottom-nav-item:hover {
+                color: white !important;
+                background: rgba(255, 255, 255, 0.08);
+            }
+            .bottom-nav-item.active {
+                color: white !important;
+                background: linear-gradient(135deg, rgba(79, 70, 229, 0.92), rgba(6, 182, 212, 0.88));
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+            }
+            .nav-icon {
+                width: 19px;
+                height: 19px;
+                display: inline-flex;
+            }
+            .nav-icon svg {
+                width: 19px;
+                height: 19px;
+                stroke: currentColor;
+            }
+            .shortcut-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.7rem;
+                margin-top: 0.8rem;
+            }
+            .shortcut-link {
+                text-decoration: none !important;
+                color: var(--text) !important;
+                border-radius: 999px;
+                border: 1px solid rgba(17, 24, 39, 0.08);
+                background: rgba(255, 255, 255, 0.86);
+                padding: 0.7rem 0.9rem;
+                font-size: 0.9rem;
+                font-weight: 700;
+            }
+            .shortcut-link:hover {
+                border-color: rgba(79, 70, 229, 0.25);
+                color: var(--primary) !important;
+            }
+            div[data-baseweb="input"] > div,
+            div[data-baseweb="base-input"] > div,
+            div[data-baseweb="select"] > div,
+            .stTextArea textarea {
+                border-radius: 14px !important;
+                border-color: rgba(17, 24, 39, 0.12) !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+            .stButton > button,
+            .stDownloadButton > button {
+                border-radius: 14px !important;
+                font-weight: 700 !important;
+                min-height: 2.8rem;
+                border: 1px solid rgba(17, 24, 39, 0.08) !important;
+            }
+            .stButton > button[kind="primary"],
+            .stDownloadButton > button[kind="primary"] {
+                background: linear-gradient(135deg, #4F46E5, #06B6D4) !important;
+                color: white !important;
+                border: none !important;
+            }
+            div[data-testid="stDataFrame"] {
+                border: 1px solid var(--border);
+                border-radius: var(--radius-md);
+                overflow: hidden;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+            }
+            @media (max-width: 720px) {
+                .block-container {
+                    padding-top: 0.8rem;
+                    padding-bottom: 7rem;
+                }
+                .hero-card {
+                    padding: 1.2rem;
+                }
+                .page-title {
+                    font-size: 1.75rem;
+                }
+                .bottom-nav-item {
+                    font-size: 0.72rem;
+                    min-height: 64px;
+                }
             }
         </style>
         """,
@@ -218,7 +407,7 @@ def initialize_page(
     icon: str = "🪑",
     allowed_roles: list[str] | None = None,
     anonymous: bool = False,
-    sidebar_state: str = "expanded",
+    sidebar_state: str = "collapsed",
 ):
     from core.auth import ensure_authenticated, get_current_user
     from core.database import init_db
@@ -226,43 +415,16 @@ def initialize_page(
     configure_page(title, icon, sidebar_state=sidebar_state)
     inject_styles()
     init_db()
-    user = get_current_user() if anonymous else ensure_authenticated(allowed_roles)
-    render_sidebar(user)
-    return user
-
-
-def render_sidebar(user) -> None:
-    import core.auth as auth
-
-    if not user:
-        return
-
-    with st.sidebar:
-        st.markdown(
-            f"""
-            <div class="sidebar-user">
-                <div class="page-eyebrow">Furniture Operations</div>
-                <div style="font-size:1.1rem;font-weight:700;color:#152534;">{user.full_name}</div>
-                <div class="mini-note">{ROLE_LABELS.get(user.role, "Account")}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown('<div class="sidebar-nav-title">Navigation</div>', unsafe_allow_html=True)
-        for item in ROLE_NAVIGATION.get(user.role, []):
-            st.page_link(item["path"], label=item["label"], icon=item["icon"])
-        if st.button("Log out", type="secondary", use_container_width=True):
-            auth.logout_current_user()
-            st.switch_page("pages/1_Login.py")
+    return get_current_user() if anonymous else ensure_authenticated(allowed_roles)
 
 
 def render_page_header(eyebrow: str, title: str, subtitle: str) -> None:
     st.markdown(
         f"""
         <div class="hero-card">
-            <div class="page-eyebrow">{eyebrow}</div>
-            <div class="page-title">{title}</div>
-            <p class="page-subtitle">{subtitle}</p>
+            <div class="page-eyebrow">{escape(eyebrow)}</div>
+            <div class="page-title">{escape(title)}</div>
+            <p class="page-subtitle">{escape(subtitle)}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -273,9 +435,9 @@ def render_metric_card(label: str, value: str, note: str) -> None:
     st.markdown(
         f"""
         <div class="metric-card">
-            <div class="metric-label">{label}</div>
-            <div class="metric-value">{value}</div>
-            <div class="metric-note">{note}</div>
+            <div class="metric-label">{escape(label)}</div>
+            <div class="metric-value">{escape(value)}</div>
+            <div class="metric-note">{escape(note)}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -284,20 +446,34 @@ def render_metric_card(label: str, value: str, note: str) -> None:
 
 def render_status_badge(status: str) -> str:
     color = STATUS_COLORS.get(status, "#344054")
-    return f'<span class="status-pill" style="background:{color};">{status}</span>'
+    return f'<span class="status-pill" style="background:{color};">{escape(status)}</span>'
 
 
 def render_detail_grid(details: dict[str, str]) -> None:
     body = "".join(
         f"""
         <div class="detail-item">
-            <div class="detail-label">{label}</div>
-            <div class="detail-value">{value}</div>
+            <div class="detail-label">{escape(label)}</div>
+            <div class="detail-value">{escape(value)}</div>
         </div>
         """
         for label, value in details.items()
     )
     st.markdown(f'<div class="detail-grid">{body}</div>', unsafe_allow_html=True)
+
+
+def render_section_title(kicker: str, title: str, subtitle: str | None = None) -> None:
+    subtitle_block = f'<div class="section-subtitle">{escape(subtitle)}</div>' if subtitle else ""
+    st.markdown(
+        f"""
+        <div style="margin-bottom:0.85rem;">
+            <div class="section-kicker">{escape(kicker)}</div>
+            <div class="section-title">{escape(title)}</div>
+            {subtitle_block}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def parse_seed_reference() -> dict[str, str]:
@@ -319,11 +495,4 @@ def region_label_map() -> dict[str, str]:
 def region_label(region: str | None) -> str:
     if not region:
         return "Unassigned"
-    mapping = region_label_map()
-    if region in mapping:
-        return mapping[region]
-    return f"{region[:7]}…"
-
-
-def next_page_for_role(role: str) -> str:
-    return DEFAULT_PAGE_BY_ROLE[role]
+    return region_label_map().get(region, region)

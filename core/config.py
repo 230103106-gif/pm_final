@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 
 
@@ -27,6 +28,8 @@ class Settings:
     app_name: str = "Geo-Optimized Furniture OMS"
     database_filename: str = "app.db"
     session_duration_hours: int = 12
+    browser_cookie_name: str = "geo_furniture_ops_session"
+    cookie_secret: str = os.getenv("GEO_FURNITURE_COOKIE_SECRET", "geo-furniture-ops-dev-secret")
     h3_resolution: int = 7
     demo_seed: bool = True
     order_statuses: list[str] = field(
@@ -77,27 +80,27 @@ ROLE_LABELS = {
 
 ROLE_NAVIGATION = {
     ROLE_ADMIN: [
-        {"path": "app.py", "label": "Overview", "icon": "🏠"},
-        {"path": "pages/4_Admin_Dashboard.py", "label": "Dashboard", "icon": "📈"},
-        {"path": "pages/5_Order_Management.py", "label": "Orders", "icon": "📦"},
-        {"path": "pages/6_Products.py", "label": "Catalog", "icon": "🪑"},
-        {"path": "pages/7_Warehouse.py", "label": "Fulfillment", "icon": "🏭"},
-        {"path": "pages/8_Analytics.py", "label": "Analytics", "icon": "🗺️"},
-        {"path": "pages/9_Audit.py", "label": "Audit Trail", "icon": "📜"},
-        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+        {"view": "overview", "label": "Overview", "icon": "home"},
+        {"view": "dashboard", "label": "Dashboard", "icon": "layout"},
+        {"view": "orders", "label": "Orders", "icon": "package"},
+        {"view": "catalog", "label": "Catalog", "icon": "grid"},
+        {"view": "fulfillment", "label": "Fulfillment", "icon": "warehouse"},
+        {"view": "analytics", "label": "Analytics", "icon": "chart"},
+        {"view": "audit", "label": "Audit Trail", "icon": "shield"},
+        {"view": "profile", "label": "Profile", "icon": "user"},
     ],
     ROLE_CUSTOMER: [
-        {"path": "app.py", "label": "Overview", "icon": "🏠"},
-        {"path": "pages/2_Shop.py", "label": "Catalog", "icon": "🛒"},
-        {"path": "pages/3_My_Orders.py", "label": "Orders", "icon": "📋"},
-        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+        {"view": "overview", "label": "Overview", "icon": "home"},
+        {"view": "shop", "label": "Shop", "icon": "bag"},
+        {"view": "orders", "label": "Orders", "icon": "package"},
+        {"view": "profile", "label": "Profile", "icon": "user"},
     ],
     ROLE_WAREHOUSE: [
-        {"path": "app.py", "label": "Overview", "icon": "🏠"},
-        {"path": "pages/5_Order_Management.py", "label": "Orders", "icon": "📦"},
-        {"path": "pages/7_Warehouse.py", "label": "Fulfillment", "icon": "🏭"},
-        {"path": "pages/8_Analytics.py", "label": "Analytics", "icon": "🗺️"},
-        {"path": "pages/10_Settings.py", "label": "Account", "icon": "⚙️"},
+        {"view": "overview", "label": "Overview", "icon": "home"},
+        {"view": "orders", "label": "Orders", "icon": "package"},
+        {"view": "fulfillment", "label": "Fulfillment", "icon": "warehouse"},
+        {"view": "analytics", "label": "Analytics", "icon": "chart"},
+        {"view": "profile", "label": "Profile", "icon": "user"},
     ],
 }
 
@@ -131,10 +134,29 @@ ROLE_PERMISSIONS = {
     },
 }
 
+DEFAULT_VIEW_BY_ROLE = {
+    ROLE_ADMIN: "overview",
+    ROLE_CUSTOMER: "overview",
+    ROLE_WAREHOUSE: "overview",
+}
+
 DEFAULT_PAGE_BY_ROLE = {
-    ROLE_ADMIN: "pages/4_Admin_Dashboard.py",
-    ROLE_CUSTOMER: "pages/2_Shop.py",
-    ROLE_WAREHOUSE: "pages/7_Warehouse.py",
+    ROLE_ADMIN: "app.py",
+    ROLE_CUSTOMER: "app.py",
+    ROLE_WAREHOUSE: "app.py",
+}
+
+LEGACY_PAGE_VIEWS = {
+    "1_Login.py": "auth",
+    "2_Shop.py": "shop",
+    "3_My_Orders.py": "orders",
+    "4_Admin_Dashboard.py": "dashboard",
+    "5_Order_Management.py": "orders",
+    "6_Products.py": "catalog",
+    "7_Warehouse.py": "fulfillment",
+    "8_Analytics.py": "analytics",
+    "9_Audit.py": "audit",
+    "10_Settings.py": "profile",
 }
 
 STATUS_COLORS = {
