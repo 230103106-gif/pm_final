@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from html import escape
+from textwrap import dedent
 
 import h3
 import plotly.express as px
@@ -117,21 +118,25 @@ def render_bottom_nav(user, active_view: str) -> None:
     for item in items:
         active_class = " active" if item["view"] == active_view else ""
         cards.append(
-            f"""
-            <a class="bottom-nav-item{active_class}" href="{href_for(item['view'])}">
-                <span class="nav-icon">{icon_svg(item["icon"])}</span>
-                <span>{escape(item["label"])}</span>
-            </a>
-            """
+            dedent(
+                f"""
+                <a class="bottom-nav-item{active_class}" href="{href_for(item['view'])}">
+                    <span class="nav-icon">{icon_svg(item["icon"])}</span>
+                    <span>{escape(item["label"])}</span>
+                </a>
+                """
+            ).strip()
         )
-    st.markdown(
-        f"""
+    st.html(
+        dedent(
+            f"""
         <div class="bottom-nav">
             <div class="bottom-nav-grid" style="grid-template-columns: repeat({len(items)}, minmax(0, 1fr));">
                 {''.join(cards)}
             </div>
         </div>
-        """,
+        """
+        ).strip(),
         unsafe_allow_html=True,
     )
 
@@ -147,33 +152,20 @@ def render_shortcuts(views: list[str], role: str) -> None:
 
 
 def render_auth_view() -> None:
-    render_page_header(
-        "Secure Access",
-        "Furniture order operations",
-        "Sign in to manage orders, catalog activity, warehouse processing, and regional reporting in one operational workspace.",
-    )
-
-    left, right = st.columns([1.05, 0.95], gap="large")
-    with left:
+    left, center, right = st.columns([1.0, 0.9, 1.0], gap="large")
+    with center:
         st.markdown(
-            """
-            <div class="surface-card">
-                <div class="section-kicker">Platform scope</div>
-                <div class="section-title">Customer ordering, administrative controls, and warehouse execution</div>
-                <div class="section-subtitle">Customer accounts can be opened online. Administrative and warehouse access is provisioned by operations leadership.</div>
-            </div>
-            """,
+            dedent(
+                """
+                <div class="hero-card" style="text-align:center; margin-top:2.5rem; margin-bottom:1.25rem;">
+                    <div class="page-eyebrow">Geo Furniture Ops</div>
+                    <div class="page-title" style="font-size:2rem; margin-bottom:0.15rem;">Sign in</div>
+                    <p class="page-subtitle">Access your workspace</p>
+                </div>
+                """
+            ).strip(),
             unsafe_allow_html=True,
         )
-        overview_cols = st.columns(3, gap="medium")
-        with overview_cols[0]:
-            render_metric_card("Workflow", "6-step", "Controlled order lifecycle with backend status validation")
-        with overview_cols[1]:
-            render_metric_card("Coverage", "H3", "Orders are assigned to delivery regions from exact coordinates")
-        with overview_cols[2]:
-            render_metric_card("Audit", "SQLite", "Authentication, product, order, and fulfillment actions are recorded")
-    with right:
-        st.markdown('<div class="auth-card">', unsafe_allow_html=True)
         sign_in_tab, register_tab = st.tabs(["Sign in", "Create account"])
 
         with sign_in_tab:
@@ -219,7 +211,6 @@ def render_auth_view() -> None:
                     auth.redirect_after_login(user)
                 except ValidationError as exc:
                     st.error(str(exc))
-        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_customer_overview(user) -> None:
