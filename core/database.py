@@ -212,7 +212,7 @@ def seed_database_if_empty() -> None:
                 order.delivered_at = created_at + timedelta(days=5)
             if status == ORDER_STATUS_CANCELLED:
                 order.cancelled_at = created_at + timedelta(hours=16)
-                order.cancellation_reason = "Seeded demo cancellation during intake review."
+                order.cancellation_reason = "Cancelled during intake review."
 
             created_orders.append(order)
 
