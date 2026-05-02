@@ -1,249 +1,172 @@
 # Geo-Optimized Furniture Order Management System
 
-A complete university capstone project that combines a **FastAPI backend**, **Streamlit frontend**, **SQLite database**, **SQLAlchemy ORM**, **H3 geospatial indexing**, **Plotly analytics**, and a **queue-driven notification worker**.
+A production-style multi-page Streamlit application for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and an audit trail designed to feel like a real internal SaaS tool rather than a toy demo.
 
-The system is designed for furniture stores that want to stop handling orders manually. It supports:
+## What It Does
 
-- Customers placing furniture orders online
-- Admins managing every order and viewing full analytics
-- Warehouse managers tracking orders only inside their assigned H3 region
-- Audit logging for user actions and order lifecycle events
-- Event-driven warehouse notification simulation
+- Runs a customer storefront for placing furniture orders through a staged confirmation flow
+- Manages a realistic order lifecycle: `Created -> Confirmed -> Assigned -> Packed -> Out for Delivery -> Delivered`
+- Enforces both role-based access control and region-based attribute access control
+- Uses H3 geospatial indexing to map delivery coordinates into operational regions
+- Persists all users, products, orders, warehouse events, sessions, and audit logs in SQLite
+- Simulates an event-driven warehouse queue when orders are created
+- Provides exportable operational data: `orders.csv`, `products.json`, and `logs.json`
+- Includes seeded demo data for immediate exploration
+
+## Architecture
+
+```text
+Presentation Layer (Streamlit)
+  app.py
+  pages/1_Login.py
+  pages/2_Shop.py
+  pages/3_My_Orders.py
+  pages/4_Admin_Dashboard.py
+  pages/5_Order_Management.py
+  pages/6_Products.py
+  pages/7_Warehouse.py
+  pages/8_Analytics.py
+  pages/9_Audit.py
+  pages/10_Settings.py
+
+Service Layer
+  services/user_service.py
+  services/product_service.py
+  services/order_service.py
+  services/warehouse_service.py
+  services/analytics_service.py
+  services/audit_service.py
+
+Core Layer
+  core/database.py
+  core/security.py
+  core/auth.py
+  core/rbac.py
+  core/abac.py
+  core/events.py
+  core/config.py
+  core/utils.py
+
+Data Layer
+  models/user.py
+  models/product.py
+  models/order.py
+  models/audit_log.py
+  models/warehouse_event.py
+  SQLite: data/app.db
+```
 
 ## Key Features
 
-- Authentication with demo accounts and JWT-based login
-- RBAC dashboards for Admin, Customer, and Warehouse Manager
-- ABAC rule: warehouse managers can only access orders assigned to their allowed H3 region
-- Furniture order creation, viewing, searching, filtering, updating, and cancellation
-- Automatic H3 region generation from latitude and longitude
-- Plotly analytics:
-  - Orders by region
-  - Orders by status
-  - Revenue by region
-  - Daily orders trend
-  - Top furniture products
-- Queue + threading notification simulation for new orders
-- Audit log page for authentication and order actions
-- Downloadable CSV reports
-- Light/dark mode switch
-- Professional landing page and polished Streamlit UI
-- Swagger/OpenAPI docs when the FastAPI app is run directly
+### Customer ordering flow
+
+- Product browsing with search and category filters
+- Step-based order creation
+- Delivery details capture with address, quantity, notes, and coordinates
+- H3 region assignment before order creation
+- Review and confirmation gate before submission
+- Personal order tracking and early-stage cancellation
+
+### Admin operations
+
+- KPI dashboard with recent order and warehouse queue visibility
+- Full order management across all regions
+- Product catalog and inventory administration
+- Audit log inspection
+- Export center for operational datasets
+
+### Warehouse operations
+
+- Region-scoped event queue
+- Warehouse intake processing for newly created orders
+- Region-based order visibility and status progression
+- Regional analytics constrained by assigned H3 region
+
+### Security and governance
+
+- BCrypt password hashing
+- Persistent session records in SQLite
+- RBAC for admin, customer, and warehouse manager personas
+- ABAC for warehouse users based on `order.h3_region == user.assigned_region`
+- Audit logging for logins, logouts, product changes, order creation, status transitions, and warehouse processing
+
+## Seeded Demo Data
+
+The app auto-seeds on first run with:
+
+- 3 users
+- 20 products
+- 50 orders
+- Multiple US cities with H3 region assignment
+- Warehouse queue records and audit logs
 
 ## Demo Credentials
 
-- `admin / admin123`
-- `customer / customer123`
-- `warehouse / warehouse123`
+- `admin` / `Admin@123`
+- `customer` / `Customer@123`
+- `warehouse` / `Warehouse@123`
 
-## Project Structure
+## Setup
 
-```text
-final_project/
-├── app/
-│   ├── __init__.py
-│   ├── auth.py
-│   ├── database.py
-│   ├── main.py
-│   ├── models.py
-│   ├── queue_worker.py
-│   └── routes.py
-├── frontend/
-│   └── streamlit_app.py
-├── tests/
-│   └── test_api.py
-├── .env.example
-├── .gitignore
-├── .streamlit/config.toml
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
-
-## Architecture Overview
-
-### Backend
-
-- **FastAPI** exposes the REST API and Swagger docs
-- **SQLAlchemy** manages the `users`, `orders`, and `audit_logs` tables
-- **SQLite** stores application data
-- **Pydantic** validates API input/output
-- **H3** converts delivery coordinates into hexagonal regional cells
-- **Queue + daemon worker thread** simulate event-driven warehouse notifications
-
-### Frontend
-
-- **Streamlit** provides the public web application
-- **Plotly** powers dashboards and charts
-- **PyDeck + Streamlit map components** visualize order locations and H3 regions
-
-## API Endpoints
-
-- `POST /login`
-- `GET /me`
-- `GET /orders`
-- `POST /orders`
-- `GET /orders/{id}`
-- `PUT /orders/{id}`
-- `POST /orders/{id}/cancel`
-- `GET /analytics`
-- `GET /audit-logs`
-- `GET /docs` for Swagger UI when FastAPI runs directly
-
-## Database Schema
-
-### `users`
-
-- `id`
-- `username`
-- `full_name`
-- `role`
-- `hashed_password`
-- `allowed_h3_region`
-- `created_at`
-
-### `orders`
-
-- `id`
-- `customer_id`
-- `customer_name`
-- `product_type`
-- `quantity`
-- `price`
-- `latitude`
-- `longitude`
-- `h3_region`
-- `status`
-- `notes`
-- `created_at`
-- `updated_at`
-
-### `audit_logs`
-
-- `id`
-- `actor_user_id`
-- `actor_username`
-- `action`
-- `target_type`
-- `target_id`
-- `description`
-- `metadata_json`
-- `created_at`
-
-## How to Run Locally
-
-### 1. Create and activate a virtual environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-### 2. Install dependencies
+### Local run
 
 ```bash
 pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### 3. Run the FastAPI backend
+The first application start creates and seeds `data/app.db`.
 
-```bash
-uvicorn app.main:app --reload
-```
-
-The backend will be available at:
-
-- API root: [http://localhost:8000](http://localhost:8000)
-- Swagger docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### 4. Run the Streamlit frontend
-
-Open a new terminal and run:
-
-```bash
-export BACKEND_URL=http://localhost:8000
-streamlit run frontend/streamlit_app.py
-```
-
-The frontend will be available at:
-
-- [http://localhost:8501](http://localhost:8501)
-
-## One-Command Local Run with Docker Compose
-
-```bash
-docker compose up --build
-```
-
-Services:
-
-- Streamlit frontend: [http://localhost:8501](http://localhost:8501)
-- FastAPI backend: [http://localhost:8000](http://localhost:8000)
-
-## Streamlit Cloud Deployment
-
-This project supports **two deployment modes**.
-
-### Option A: Easiest deployment on Streamlit Cloud
-
-Deploy only the Streamlit app using:
-
-- App file: `frontend/streamlit_app.py`
-
-In this mode, do **not** set `BACKEND_URL`. The Streamlit app automatically starts an **embedded FastAPI backend** inside the same deployment process, which makes demos and grading very simple.
-
-Why this is useful:
-
-- No second hosting service is required
-- SQLite still works for lightweight demos
-- The UI and backend logic remain in the same GitHub repo
-
-### Option B: Split deployment for public production demos
-
-1. Deploy the FastAPI backend on Render, Railway, Fly.io, or another Python host.
-2. Set `BACKEND_URL` in Streamlit Cloud secrets or environment variables.
-3. Deploy the Streamlit frontend separately on Streamlit Cloud.
-
-Recommended environment variables:
-
-- `BACKEND_URL=https://your-backend-url`
-- `SECRET_KEY=your-secret`
-- `DATABASE_URL=sqlite:///./geo_furniture.db`
-- `H3_RESOLUTION=7`
-
-## Running Tests
+### Run tests
 
 ```bash
 pytest
 ```
 
-The tests cover:
+## Deployment Notes
 
-- Demo account login
-- Order creation
-- Queue-driven warehouse notification creation
-- Warehouse regional access control
-- Input validation
+### GitHub
 
-## Seed Data
+1. Push the repository to GitHub.
+2. Ensure `requirements.txt` is present at the repo root.
+3. Commit the Streamlit pages and core modules as-is.
 
-The application auto-seeds:
+### Streamlit Community Cloud
 
-- 3 demo users
-- Sample furniture orders across multiple regions
-- Realistic order statuses for analytics and dashboard previews
+1. Create a new app from this repository.
+2. Set the entrypoint to `app.py`.
+3. Deploy with the default Python environment.
+4. The SQLite database will be created automatically inside `data/app.db` at startup.
 
-## Teacher-Facing Highlights
+## Exports
 
-- Clear separation between frontend and backend
-- Geospatial optimization using H3 hex indexing
-- Real role-based and attribute-based access control
-- Event-driven simulation using queue/threading
-- Professional dashboard design and analytics
-- Deployment flexibility for Streamlit Cloud and split hosting
-- Auditability and test coverage
+- `orders.csv`: generated from the current order scope
+- `products.json`: full product catalog snapshot
+- `logs.json`: audit trail export
 
-## Suggested GitHub Repository Description
+Files are written to `data/exports/` and also exposed through Streamlit download buttons.
 
-`Geo-optimized furniture order management system built with FastAPI, Streamlit, SQLite, SQLAlchemy, H3, Plotly, and queue-driven notifications.`
+## Project Structure
+
+```text
+final_project/
+  app.py
+  requirements.txt
+  README.md
+  .gitignore
+  .streamlit/config.toml
+  core/
+  models/
+  services/
+  pages/
+  data/
+  tests/
+```
+
+## Future Improvements
+
+- Move sessions from Streamlit state plus SQLite records to signed browser cookies
+- Add warehouse entities and many-to-many regional coverage instead of a single assigned region
+- Integrate map-based region visualization with H3 cell overlays
+- Add email or webhook delivery for warehouse event notifications
+- Expand test coverage with full lifecycle transition scenarios and page-level integration tests

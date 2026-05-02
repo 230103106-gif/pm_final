@@ -1,0 +1,344 @@
+{
+  "seed": 42,
+  "order_count": 50,
+  "users": [
+    {
+      "username": "admin",
+      "full_name": "Amina Tolegen",
+      "password": "Admin@123",
+      "role": "admin"
+    },
+    {
+      "username": "customer",
+      "full_name": "Jordan Miller",
+      "password": "Customer@123",
+      "role": "customer"
+    },
+    {
+      "username": "warehouse",
+      "full_name": "Luis Ortega",
+      "password": "Warehouse@123",
+      "role": "warehouse_manager",
+      "assigned_city": "Chicago"
+    }
+  ],
+  "cities": [
+    {
+      "name": "Chicago",
+      "state": "IL",
+      "country": "USA",
+      "latitude": 41.8781,
+      "longitude": -87.6298,
+      "street_samples": [
+        "1210 W Fulton Market",
+        "742 N State Street",
+        "1801 S Michigan Avenue",
+        "2233 W Armitage Avenue"
+      ]
+    },
+    {
+      "name": "Dallas",
+      "state": "TX",
+      "country": "USA",
+      "latitude": 32.7767,
+      "longitude": -96.797,
+      "street_samples": [
+        "3300 Oak Lawn Avenue",
+        "1800 Commerce Street",
+        "4901 Ross Avenue",
+        "6201 Greenville Avenue"
+      ]
+    },
+    {
+      "name": "Denver",
+      "state": "CO",
+      "country": "USA",
+      "latitude": 39.7392,
+      "longitude": -104.9903,
+      "street_samples": [
+        "1401 Wynkoop Street",
+        "2200 Blake Street",
+        "695 Sherman Street",
+        "301 Speer Boulevard"
+      ]
+    },
+    {
+      "name": "Atlanta",
+      "state": "GA",
+      "country": "USA",
+      "latitude": 33.749,
+      "longitude": -84.388,
+      "street_samples": [
+        "999 Peachtree Street NE",
+        "2870 Peachtree Road",
+        "760 Glenwood Avenue SE",
+        "1230 Caroline Street NE"
+      ]
+    },
+    {
+      "name": "Seattle",
+      "state": "WA",
+      "country": "USA",
+      "latitude": 47.6062,
+      "longitude": -122.3321,
+      "street_samples": [
+        "1500 Westlake Avenue N",
+        "2400 1st Avenue",
+        "425 Queen Anne Avenue N",
+        "700 E Pike Street"
+      ]
+    }
+  ],
+  "customer_profiles": [
+    {
+      "name": "Maya Thompson",
+      "phone": "+1 312 555 0141",
+      "postal_code": "60607"
+    },
+    {
+      "name": "Daniel Chen",
+      "phone": "+1 214 555 0193",
+      "postal_code": "75204"
+    },
+    {
+      "name": "Sophia Patel",
+      "phone": "+1 303 555 0106",
+      "postal_code": "80202"
+    },
+    {
+      "name": "Ethan Brooks",
+      "phone": "+1 404 555 0188",
+      "postal_code": "30308"
+    },
+    {
+      "name": "Olivia Ramirez",
+      "phone": "+1 206 555 0129",
+      "postal_code": "98101"
+    },
+    {
+      "name": "Noah Foster",
+      "phone": "+1 773 555 0150",
+      "postal_code": "60610"
+    },
+    {
+      "name": "Ava Reynolds",
+      "phone": "+1 972 555 0110",
+      "postal_code": "75219"
+    },
+    {
+      "name": "Liam Walker",
+      "phone": "+1 720 555 0134",
+      "postal_code": "80205"
+    }
+  ],
+  "order_notes": [
+    "White-glove delivery requested for the building freight elevator window.",
+    "Call 30 minutes before arrival and confirm dock access with building staff.",
+    "Customer requested assembly service and packaging removal.",
+    "Deliver after 3 PM due to loading zone restrictions.",
+    "Coordinate with front desk for access badge and loading instructions.",
+    "Leave packaging labels intact for facilities receiving inspection."
+  ],
+  "products": [
+    {
+      "sku": "SOFA-001",
+      "name": "Harbor Modular Sofa",
+      "category": "Living Room",
+      "material": "Performance Fabric",
+      "description": "Three-seat modular sofa with stain-resistant upholstery, steel support frame, and lounge-depth cushions.",
+      "price": 1899.0,
+      "stock_quantity": 24,
+      "dimensions": "112 x 38 x 34 in"
+    },
+    {
+      "sku": "SOFA-002",
+      "name": "Mason Leather Sectional",
+      "category": "Living Room",
+      "material": "Top-Grain Leather",
+      "description": "L-shaped sectional designed for executive lounges with walnut feet and high-density foam support.",
+      "price": 3290.0,
+      "stock_quantity": 12,
+      "dimensions": "121 x 94 x 35 in"
+    },
+    {
+      "sku": "SOFA-003",
+      "name": "Alder Compact Loveseat",
+      "category": "Living Room",
+      "material": "Textured Weave",
+      "description": "Space-efficient loveseat with tapered wood legs for apartments, waiting rooms, and staged model homes.",
+      "price": 1240.0,
+      "stock_quantity": 18,
+      "dimensions": "68 x 35 x 33 in"
+    },
+    {
+      "sku": "TABLE-001",
+      "name": "Atlas Dining Table",
+      "category": "Dining",
+      "material": "Solid Oak",
+      "description": "Commercial-grade six-person dining table with sealed oak top and reinforced pedestal base.",
+      "price": 2115.0,
+      "stock_quantity": 15,
+      "dimensions": "84 x 40 x 30 in"
+    },
+    {
+      "sku": "TABLE-002",
+      "name": "Verge Extendable Dining Table",
+      "category": "Dining",
+      "material": "Ash Veneer",
+      "description": "Expandable table with concealed leaf storage designed for flexible hospitality and residential layouts.",
+      "price": 2590.0,
+      "stock_quantity": 9,
+      "dimensions": "72-96 x 39 x 30 in"
+    },
+    {
+      "sku": "TABLE-003",
+      "name": "Summit Coffee Table",
+      "category": "Living Room",
+      "material": "Powder-Coated Steel",
+      "description": "Architectural coffee table with oak inlay shelf and durable low-sheen finish.",
+      "price": 640.0,
+      "stock_quantity": 27,
+      "dimensions": "48 x 28 x 16 in"
+    },
+    {
+      "sku": "CHAIR-001",
+      "name": "Northfield Dining Chair",
+      "category": "Seating",
+      "material": "Bent Oak",
+      "description": "Stackable dining chair with ergonomic backrest and contract-grade joinery.",
+      "price": 255.0,
+      "stock_quantity": 62,
+      "dimensions": "19 x 21 x 32 in"
+    },
+    {
+      "sku": "CHAIR-002",
+      "name": "Civic Lounge Chair",
+      "category": "Seating",
+      "material": "Boucle Upholstery",
+      "description": "Low-profile lounge chair built for reception areas and premium residential corners.",
+      "price": 880.0,
+      "stock_quantity": 21,
+      "dimensions": "31 x 32 x 30 in"
+    },
+    {
+      "sku": "CHAIR-003",
+      "name": "Draft Office Task Chair",
+      "category": "Office",
+      "material": "Mesh and Aluminum",
+      "description": "Ergonomic task chair with lumbar support, tilt lock, and durable caster base.",
+      "price": 525.0,
+      "stock_quantity": 33,
+      "dimensions": "27 x 27 x 42 in"
+    },
+    {
+      "sku": "BED-001",
+      "name": "Briar Upholstered Bed",
+      "category": "Bedroom",
+      "material": "Linen Blend",
+      "description": "Queen-size platform bed with channel-tufted headboard and concealed center support.",
+      "price": 1710.0,
+      "stock_quantity": 10,
+      "dimensions": "87 x 66 x 50 in"
+    },
+    {
+      "sku": "BED-002",
+      "name": "Linden Storage Bed",
+      "category": "Bedroom",
+      "material": "Walnut Veneer",
+      "description": "King-size bed frame with integrated drawer storage and anti-slam hardware.",
+      "price": 2795.0,
+      "stock_quantity": 8,
+      "dimensions": "89 x 82 x 48 in"
+    },
+    {
+      "sku": "STOR-001",
+      "name": "Ridge Credenza",
+      "category": "Storage",
+      "material": "American Walnut",
+      "description": "Four-door credenza with soft-close hardware, cable management, and hidden leveling feet.",
+      "price": 2340.0,
+      "stock_quantity": 11,
+      "dimensions": "72 x 19 x 30 in"
+    },
+    {
+      "sku": "STOR-002",
+      "name": "Foundry Media Console",
+      "category": "Storage",
+      "material": "Smoked Oak",
+      "description": "Low-profile media console with ventilated shelves sized for AV racks and routers.",
+      "price": 1490.0,
+      "stock_quantity": 14,
+      "dimensions": "78 x 18 x 24 in"
+    },
+    {
+      "sku": "STOR-003",
+      "name": "Ledger Wardrobe Cabinet",
+      "category": "Storage",
+      "material": "Matte Lacquer",
+      "description": "Tall wardrobe cabinet with hanging bar, adjustable shelving, and anti-tip mounting kit.",
+      "price": 1985.0,
+      "stock_quantity": 7,
+      "dimensions": "40 x 24 x 78 in"
+    },
+    {
+      "sku": "DESK-001",
+      "name": "Portland Executive Desk",
+      "category": "Office",
+      "material": "Rift-Sawn Oak",
+      "description": "Large-format executive desk with integrated power grommets and concealed cable tray.",
+      "price": 2480.0,
+      "stock_quantity": 9,
+      "dimensions": "72 x 34 x 30 in"
+    },
+    {
+      "sku": "DESK-002",
+      "name": "Slope Standing Desk",
+      "category": "Office",
+      "material": "Laminate and Steel",
+      "description": "Electric sit-stand desk with memory presets and anti-collision motor logic.",
+      "price": 990.0,
+      "stock_quantity": 19,
+      "dimensions": "60 x 30 x 25-50 in"
+    },
+    {
+      "sku": "LIGHT-001",
+      "name": "Beacon Floor Lamp",
+      "category": "Accessories",
+      "material": "Brushed Brass",
+      "description": "Ambient floor lamp with dimmable LED head and weighted marble base.",
+      "price": 410.0,
+      "stock_quantity": 26,
+      "dimensions": "18 x 18 x 64 in"
+    },
+    {
+      "sku": "RUG-001",
+      "name": "Marlow Wool Area Rug",
+      "category": "Accessories",
+      "material": "Hand-Tufted Wool",
+      "description": "Dense wool area rug with low-contrast pattern built for hospitality-grade traffic.",
+      "price": 760.0,
+      "stock_quantity": 16,
+      "dimensions": "8 x 10 ft"
+    },
+    {
+      "sku": "OUTD-001",
+      "name": "Terrace Outdoor Set",
+      "category": "Outdoor",
+      "material": "Teak and Rope",
+      "description": "Four-piece outdoor lounge set with weather-sealed teak frames and quick-dry cushions.",
+      "price": 3180.0,
+      "stock_quantity": 6,
+      "dimensions": "Set of 4 pieces"
+    },
+    {
+      "sku": "BAR-001",
+      "name": "Mercer Counter Stool",
+      "category": "Seating",
+      "material": "Powder-Coated Steel",
+      "description": "Counter-height stool with oak seat, footrest guard, and commercial floor glides.",
+      "price": 295.0,
+      "stock_quantity": 38,
+      "dimensions": "18 x 19 x 36 in"
+    }
+  ]
+}
