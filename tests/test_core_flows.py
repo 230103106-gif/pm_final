@@ -4,7 +4,7 @@ import h3
 import pytest
 from sqlmodel import select
 
-from core.database import get_engine, get_session, init_db, reset_database_url, set_database_url
+from core.database import get_session, init_db, reset_database_url, set_database_url
 from core.utils import AuthorizationError
 from models.product import Product
 from models.user import User
@@ -32,6 +32,9 @@ def test_login_flow_with_persistent_session(seeded_database):
         resolved = user_service.user_from_session_token(session, token)
         assert resolved is not None
         assert resolved.username == "admin"
+        detached_copy = resolved
+
+    assert detached_copy.role == "admin"
 
 
 def test_order_creation_persists_and_generates_event(seeded_database):

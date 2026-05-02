@@ -66,7 +66,10 @@ def reset_database_url() -> None:
 
 
 def get_session() -> Session:
-    return Session(get_engine())
+    # Streamlit pages often return ORM objects beyond the session scope.
+    # Keep loaded attributes available after commit/close to avoid
+    # DetachedInstanceError during page initialization and redirects.
+    return Session(get_engine(), expire_on_commit=False)
 
 
 def init_db() -> None:
