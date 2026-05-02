@@ -281,78 +281,6 @@ def inject_styles() -> None:
                 font-size: 0.84rem;
                 font-weight: 700;
             }
-            .bottom-nav {
-                position: fixed;
-                left: 50%;
-                transform: translateX(-50%);
-                bottom: 18px;
-                width: min(960px, calc(100vw - 24px));
-                border-radius: 24px;
-                padding: 0.5rem;
-                background: rgba(17, 24, 39, 0.94);
-                box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(18px);
-                z-index: 99999;
-            }
-            .bottom-nav-grid {
-                display: grid;
-                gap: 0.45rem;
-            }
-            .bottom-nav-item {
-                text-decoration: none !important;
-                color: rgba(255, 255, 255, 0.72) !important;
-                border-radius: 18px;
-                padding: 0.75rem 0.45rem;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 0.28rem;
-                min-height: 68px;
-                transition: all 0.2s ease;
-                font-size: 0.78rem;
-                font-weight: 700;
-            }
-            .bottom-nav-item:hover {
-                color: white !important;
-                background: rgba(255, 255, 255, 0.08);
-            }
-            .bottom-nav-item.active {
-                color: white !important;
-                background: linear-gradient(135deg, rgba(79, 70, 229, 0.92), rgba(6, 182, 212, 0.88));
-                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-            }
-            .nav-icon {
-                width: 19px;
-                height: 19px;
-                display: inline-flex;
-            }
-            .nav-icon svg {
-                width: 19px;
-                height: 19px;
-                stroke: currentColor;
-            }
-            .shortcut-row {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.7rem;
-                margin-top: 0.8rem;
-            }
-            .shortcut-link {
-                text-decoration: none !important;
-                color: var(--text) !important;
-                border-radius: 999px;
-                border: 1px solid rgba(17, 24, 39, 0.08);
-                background: rgba(255, 255, 255, 0.86);
-                padding: 0.7rem 0.9rem;
-                font-size: 0.9rem;
-                font-weight: 700;
-            }
-            .shortcut-link:hover {
-                border-color: rgba(79, 70, 229, 0.25);
-                color: var(--primary) !important;
-            }
             div[data-baseweb="input"] > div,
             div[data-baseweb="base-input"] > div,
             div[data-baseweb="select"] > div,
@@ -383,17 +311,13 @@ def inject_styles() -> None:
             @media (max-width: 720px) {
                 .block-container {
                     padding-top: 0.8rem;
-                    padding-bottom: 7rem;
+                    padding-bottom: 4rem;
                 }
                 .hero-card {
                     padding: 1.2rem;
                 }
                 .page-title {
                     font-size: 1.75rem;
-                }
-                .bottom-nav-item {
-                    font-size: 0.72rem;
-                    min-height: 64px;
                 }
             }
         </style>

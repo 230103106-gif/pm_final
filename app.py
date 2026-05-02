@@ -36,18 +36,6 @@ from services import analytics_service, audit_service, order_service, product_se
 PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
 ROLE_VIEWS = {role: {item["view"] for item in items} for role, items in ROLE_NAVIGATION.items()}
 
-ICON_SVGS = {
-    "home": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg>',
-    "layout": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M9 10h12"/></svg>',
-    "package": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="m3 8.5 9-5 9 5-9 5-9-5Z"/><path d="M3 8.5V18l9 5 9-5V8.5"/><path d="M12 13.5V23"/></svg>',
-    "grid": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
-    "warehouse": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 10.5 12 4l9 6.5V20H3v-9.5Z"/><path d="M7 20v-6h10v6"/><path d="M9 11h.01M15 11h.01"/></svg>',
-    "chart": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20V8"/></svg>',
-    "shield": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 3 5 6v6c0 5 3.5 8.5 7 9 3.5-.5 7-4 7-9V6l-7-3Z"/><path d="m9.5 12 1.7 1.7 3.8-4.2"/></svg>',
-    "user": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M5 21c1.8-3.3 5-5 7-5s5.2 1.7 7 5"/></svg>',
-    "bag": '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M5 9h14l-1.2 11H6.2L5 9Z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></svg>',
-}
-
 
 def current_view() -> str:
     raw = st.query_params.get("view", "")
@@ -60,14 +48,6 @@ def set_view(view: str, rerun: bool = False) -> None:
     auth.set_active_view(view)
     if rerun:
         st.rerun()
-
-
-def href_for(view: str) -> str:
-    return f"?view={view}"
-
-
-def icon_svg(name: str) -> str:
-    return ICON_SVGS.get(name, ICON_SVGS["grid"])
 
 
 def resolve_active_view(user) -> str:
@@ -114,41 +94,38 @@ def render_topbar(user) -> None:
 
 def render_bottom_nav(user, active_view: str) -> None:
     items = ROLE_NAVIGATION[user.role]
-    cards = []
-    for item in items:
-        active_class = " active" if item["view"] == active_view else ""
-        cards.append(
-            dedent(
-                f"""
-                <a class="bottom-nav-item{active_class}" href="{href_for(item['view'])}">
-                    <span class="nav-icon">{icon_svg(item["icon"])}</span>
-                    <span>{escape(item["label"])}</span>
-                </a>
-                """
-            ).strip()
-        )
-    st.html(
-        dedent(
-            f"""
-        <div class="bottom-nav">
-            <div class="bottom-nav-grid" style="grid-template-columns: repeat({len(items)}, minmax(0, 1fr));">
-                {''.join(cards)}
-            </div>
-        </div>
-        """
-        ).strip(),
-        unsafe_allow_html=True,
-    )
+    st.markdown("---")
+    rows = [items[index : index + 4] for index in range(0, len(items), 4)]
+    for row_index, row_items in enumerate(rows):
+        row_columns = st.columns(len(row_items), gap="small")
+        for column, item in zip(row_columns, row_items):
+            with column:
+                clicked = st.button(
+                    item["label"],
+                    key=f"bottom_nav_{user.role}_{row_index}_{item['view']}",
+                    type="primary" if item["view"] == active_view else "secondary",
+                    use_container_width=True,
+                )
+                if clicked and item["view"] != active_view:
+                    set_view(item["view"], rerun=True)
 
 
 def render_shortcuts(views: list[str], role: str) -> None:
     items = [item for item in ROLE_NAVIGATION[role] if item["view"] in views]
     if not items:
         return
-    links = "".join(
-        f'<a class="shortcut-link" href="{href_for(item["view"])}">{escape(item["label"])}</a>' for item in items
-    )
-    st.markdown(f'<div class="shortcut-row">{links}</div>', unsafe_allow_html=True)
+    shortcut_columns = st.columns(len(items), gap="small")
+    active_view = current_view()
+    for column, item in zip(shortcut_columns, items):
+        with column:
+            clicked = st.button(
+                item["label"],
+                key=f"shortcut_{role}_{item['view']}",
+                type="primary" if item["view"] == active_view else "secondary",
+                use_container_width=True,
+            )
+            if clicked and item["view"] != active_view:
+                set_view(item["view"], rerun=True)
 
 
 def render_auth_view() -> None:
