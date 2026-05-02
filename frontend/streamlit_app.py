@@ -31,7 +31,7 @@ STATUS_COLORS = {
     "Pending": [201, 111, 45, 220],
     "Processing": [13, 148, 136, 220],
     "Shipped": [2, 132, 199, 220],
-    "Delivered": [34, 197, 94, 220],4
+    "Delivered": [34, 197, 94, 220],
     "Cancelled": [239, 68, 68, 220],
 }
 ROLE_LABELS = {
