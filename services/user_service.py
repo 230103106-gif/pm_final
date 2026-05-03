@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlmodel import Session, select
 
 from core.config import ROLE_ADMIN, ROLE_CUSTOMER, ROLE_WAREHOUSE, settings
@@ -74,8 +75,15 @@ def create_user(
         is_active=True,
     )
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    try:
+        session.commit()
+        session.refresh(user)
+    except IntegrityError as exc:
+        session.rollback()
+        raise ValidationError("A user with that username already exists.") from exc
+    except OperationalError as exc:
+        session.rollback()
+        raise ValidationError("Account registration is temporarily unavailable. Please refresh the app and try again.") from exc
     return user
 
 

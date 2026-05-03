@@ -115,6 +115,20 @@ def test_customer_account_registration_creates_active_customer(seeded_database):
         assert resolved.is_active is True
 
 
+def test_customer_registration_rejects_duplicate_username(seeded_database):
+    from core.utils import ValidationError
+
+    with get_session() as session:
+        with pytest.raises(ValidationError):
+            user_service.create_user(
+                session,
+                username="customer",
+                full_name="Duplicate Customer",
+                password="StrongPass123",
+                role="customer",
+            )
+
+
 def test_browser_session_cookie_round_trip(seeded_database):
     with get_session() as session:
         user = session.exec(select(User).where(User.username == "customer")).first()

@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import h3
+from sqlalchemy import event
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from core.config import (
@@ -37,26 +38,39 @@ _engine = None
 _database_url_override: str | None = None
 
 
+def _create_app_engine(database_url: str):
+    if database_url.startswith("sqlite"):
+        engine = create_engine(
+            database_url,
+            echo=False,
+            connect_args={"check_same_thread": False, "timeout": 30},
+        )
+        event.listen(engine, "connect", _configure_sqlite_connection)
+        return engine
+    engine = create_engine(database_url, echo=False)
+    return engine
+
+
+def _configure_sqlite_connection(dbapi_connection, _) -> None:
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA busy_timeout=30000")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.close()
+
+
 def get_engine():
     global _engine
     if _engine is None:
         database_url = _database_url_override or settings.database_url
-        _engine = create_engine(
-            database_url,
-            echo=False,
-            connect_args={"check_same_thread": False},
-        )
+        _engine = _create_app_engine(database_url)
     return _engine
 
 
 def set_database_url(database_url: str) -> None:
     global _engine, _database_url_override
     _database_url_override = database_url
-    _engine = create_engine(
-        database_url,
-        echo=False,
-        connect_args={"check_same_thread": False},
-    )
+    _engine = _create_app_engine(database_url)
 
 
 def reset_database_url() -> None:

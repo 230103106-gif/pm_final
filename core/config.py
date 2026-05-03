@@ -7,8 +7,19 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
-EXPORT_DIR = DATA_DIR / "exports"
 SEED_DATA_PATH = DATA_DIR / "seed_data.json"
+
+
+def writable_data_dir() -> Path:
+    explicit_dir = os.getenv("GEO_FURNITURE_DATA_DIR")
+    if explicit_dir:
+        return Path(explicit_dir).expanduser()
+    if str(BASE_DIR).startswith("/mount/src/"):
+        return Path(os.getenv("TMPDIR", "/tmp")) / "geo_furniture_ops"
+    return DATA_DIR
+
+
+EXPORT_DIR = writable_data_dir() / "exports"
 
 ROLE_ADMIN = "admin"
 ROLE_CUSTOMER = "customer"
@@ -63,11 +74,14 @@ class Settings:
 
     @property
     def database_path(self) -> Path:
-        return DATA_DIR / self.database_filename
+        explicit_path = os.getenv("GEO_FURNITURE_DATABASE_PATH")
+        if explicit_path:
+            return Path(explicit_path).expanduser()
+        return writable_data_dir() / self.database_filename
 
     @property
     def database_url(self) -> str:
-        return f"sqlite:///{self.database_path}"
+        return os.getenv("GEO_FURNITURE_DATABASE_URL", f"sqlite:///{self.database_path}")
 
 
 settings = Settings()
