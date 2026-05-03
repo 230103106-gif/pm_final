@@ -73,9 +73,9 @@ API Layer (FastAPI)
 ```
 
 ## Technology Stack
-  Back-end: fast API, sqLite
-  Front-end: StreamLit
-  Geospatial Logic: H3 Indexing
+- Back-end: fast API, sqLite
+- Front-end: StreamLit
+- Geospatial Logic: H3 Indexing
 
 ## Key Features
 
