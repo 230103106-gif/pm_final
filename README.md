@@ -3,6 +3,7 @@
 A FastAPI backend plus optional Streamlit workspace for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
 
 
+
 ## What It Does
 
 Exposes a Swagger/Postman-ready API for authentication, orders, products, warehouse events, analytics, and audit logs
@@ -199,6 +200,7 @@ final_project/
   data/
   tests/
 ```
+his project provides a practical and secure furniture order management system that combines FastAPI, Streamlit, SQLite, and  geospatial logic. It supports customers, admins, and warehouse managers with role-based workflows, order tracking, analytics, and audit logging.
 
 ## Team Members
 - Didar Nuray 230103268 – PM & System Architect
