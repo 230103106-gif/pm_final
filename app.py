@@ -30,12 +30,47 @@ from core.utils import (
     render_page_header,
     render_section_title,
     render_status_badge,
+    utcnow,
 )
 from services import analytics_service, audit_service, order_service, product_service, user_service, warehouse_service
 
 
 PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
 ROLE_VIEWS = {role: {item["view"] for item in items} for role, items in ROLE_NAVIGATION.items()}
+AUTH_BACKGROUND_URL = "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2200&q=85"
+PRODUCT_IMAGE_URLS = {
+    "SOFA-001": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80",
+    "SOFA-002": "https://images.unsplash.com/photo-1540574163026-643ea20ade25?auto=format&fit=crop&w=900&q=80",
+    "SOFA-003": "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=900&q=80",
+    "TABLE-001": "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=900&q=80",
+    "TABLE-002": "https://images.unsplash.com/photo-1604578762246-41134e37f9cc?auto=format&fit=crop&w=900&q=80",
+    "TABLE-003": "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=900&q=80",
+    "CHAIR-001": "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&w=900&q=80",
+    "CHAIR-002": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=900&q=80",
+    "CHAIR-003": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=900&q=80",
+    "BED-001": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+    "BED-002": "https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=900&q=80",
+    "STOR-001": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=80",
+    "STOR-002": "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=900&q=80",
+    "STOR-003": "https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&w=900&q=80",
+    "DESK-001": "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=900&q=80",
+    "DESK-002": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80",
+    "LIGHT-001": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80",
+    "RUG-001": "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=900&q=80",
+    "OUTD-001": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=80",
+    "BAR-001": "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=900&q=80",
+}
+CATEGORY_IMAGE_URLS = {
+    "Living Room": PRODUCT_IMAGE_URLS["SOFA-001"],
+    "Dining": PRODUCT_IMAGE_URLS["TABLE-001"],
+    "Seating": PRODUCT_IMAGE_URLS["CHAIR-001"],
+    "Office": PRODUCT_IMAGE_URLS["DESK-001"],
+    "Bedroom": PRODUCT_IMAGE_URLS["BED-001"],
+    "Storage": PRODUCT_IMAGE_URLS["STOR-001"],
+    "Accessories": PRODUCT_IMAGE_URLS["LIGHT-001"],
+    "Outdoor": PRODUCT_IMAGE_URLS["OUTD-001"],
+    "Marketplace": PRODUCT_IMAGE_URLS["SOFA-002"],
+}
 
 
 def current_view() -> str:
@@ -49,6 +84,22 @@ def set_view(view: str, rerun: bool = False) -> None:
     auth.set_active_view(view)
     if rerun:
         st.rerun()
+
+
+def product_image_url(product) -> str:
+    return PRODUCT_IMAGE_URLS.get(product.sku, CATEGORY_IMAGE_URLS.get(product.category, CATEGORY_IMAGE_URLS["Marketplace"]))
+
+
+def product_image_style(product) -> str:
+    return (
+        "background-image:"
+        "linear-gradient(180deg, rgba(20, 15, 10, 0.05), rgba(20, 15, 10, 0.28)),"
+        f"url('{escape(product_image_url(product))}');"
+    )
+
+
+def generate_seller_sku(user) -> str:
+    return f"SELL-{user.id}-{utcnow().strftime('%m%d%H%M%S')}"
 
 
 def resolve_active_view(user) -> str:
@@ -95,8 +146,8 @@ def render_topbar(user) -> None:
 
 def render_bottom_nav(user, active_view: str) -> None:
     items = ROLE_NAVIGATION[user.role]
-    st.markdown("---")
-    rows = [items[index : index + 4] for index in range(0, len(items), 4)]
+    st.markdown('<div class="top-nav-shell"><div class="section-kicker">Navigation</div></div>', unsafe_allow_html=True)
+    rows = [items[index : index + 8] for index in range(0, len(items), 8)]
     for row_index, row_items in enumerate(rows):
         row_columns = st.columns(len(row_items), gap="small")
         for column, item in zip(row_columns, row_items):
@@ -109,6 +160,15 @@ def render_bottom_nav(user, active_view: str) -> None:
                 )
                 if clicked and item["view"] != active_view:
                     set_view(item["view"], rerun=True)
+    theme_cols = st.columns([0.82, 0.18], gap="small")
+    with theme_cols[1]:
+        if "dark_mode_toggle" not in st.session_state:
+            st.session_state.dark_mode_toggle = st.session_state.get("app_theme", "light") == "dark"
+        is_dark = st.toggle("Dark mode", key="dark_mode_toggle")
+        next_theme = "dark" if is_dark else "light"
+        if st.session_state.get("app_theme", "light") != next_theme:
+            st.session_state.app_theme = next_theme
+            st.rerun()
 
 
 def render_shortcuts(views: list[str], role: str) -> None:
@@ -296,6 +356,9 @@ def render_product_cards(products: list, *, limit: int | None = None) -> None:
     for product in visible:
         cards.append(
             '<div class="product-list-card">'
+            f'<div class="product-list-image" style="{product_image_style(product)}">'
+            f'<span class="product-art-badge">{escape(product.category)}</span>'
+            '</div>'
             '<div class="product-card-top">'
             f'<div><div class="order-title">{escape(product.name)}</div>'
             f'<div class="order-subtitle">{escape(product.sku)} · {escape(product.category)}</div></div>'
@@ -392,18 +455,40 @@ def render_details_payload(details: dict) -> None:
 
 
 def render_auth_view() -> None:
-    left, center, right = st.columns([1.0, 0.9, 1.0], gap="large")
-    with center:
+    st.markdown(
+        f"""
+        <div class="auth-backdrop" style="background-image: linear-gradient(90deg, rgba(44, 29, 17, 0.78), rgba(44, 29, 17, 0.24)), url('{AUTH_BACKGROUND_URL}');"></div>
+        <div class="auth-tint"></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    left, right = st.columns([1.18, 0.82], gap="large")
+    with left:
         st.markdown(
             dedent(
                 """
-                <div class="hero-card" style="text-align:center; margin-top:2.5rem; margin-bottom:1.25rem;">
-                    <div class="page-eyebrow">Geo Furniture Ops</div>
-                    <div class="page-title" style="font-size:2rem; margin-bottom:0.15rem;">Sign in</div>
-                    <p class="page-subtitle">Access your workspace</p>
+                <div class="auth-copy">
+                    <div class="auth-pill">Geo Furniture Ops</div>
+                    <div class="auth-title">Furniture marketplace, warehouse routing, and order control.</div>
+                    <p class="auth-subtitle">Buy, list, route, and monitor furniture orders from one warm workspace built for the capstone flow.</p>
+                    <div class="auth-stats">
+                        <div><strong>Buy</strong><span>Customer orders</span></div>
+                        <div><strong>Sell</strong><span>Marketplace listings</span></div>
+                        <div><strong>Route</strong><span>Geo logistics</span></div>
+                    </div>
                 </div>
                 """
             ).strip(),
+            unsafe_allow_html=True,
+        )
+    with right:
+        st.markdown(
+            """
+            <div class="auth-panel-heading">
+                <div class="auth-panel-title">Welcome back</div>
+                <div class="auth-panel-note">Use demo credentials or create a customer marketplace account.</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
         sign_in_tab, register_tab = st.tabs(["Sign in", "Create account"])
@@ -636,11 +721,67 @@ def render_dashboard_view(user) -> None:
                 st.download_button("logs.json", data=log_export_payload, file_name=log_export_path.name, mime="application/json", use_container_width=True)
 
 
+def render_seller_mode(user, session) -> None:
+    all_products = product_service.list_products(session, include_inactive=True)
+    seller_prefix = f"SELL-{user.id}-"
+    seller_products = [product for product in all_products if product.sku.startswith(seller_prefix)]
+    active_seller_products = [product for product in seller_products if product.is_active]
+
+    metrics = st.columns(3, gap="medium")
+    with metrics[0]:
+        render_metric_card("Listings", str(len(seller_products)), "Products listed from this account")
+    with metrics[1]:
+        render_metric_card("Active", str(len(active_seller_products)), "Visible in the marketplace")
+    with metrics[2]:
+        render_metric_card("Inventory", str(sum(product.stock_quantity for product in active_seller_products)), "Units available for buyers")
+
+    render_section_title("Seller studio", "List furniture for sale", "Create a marketplace product that buyers can order through the same geo-routing flow.")
+    with st.form("seller_listing_form", clear_on_submit=False):
+        category_options = sorted(set(product_service.categories(session) + ["Marketplace"]))
+        form_cols = st.columns(2, gap="large")
+        with form_cols[0]:
+            name = st.text_input("Product name", placeholder="Example: Walnut media console")
+            category = st.selectbox("Category", category_options, index=category_options.index("Marketplace") if "Marketplace" in category_options else 0)
+            material = st.text_input("Material", placeholder="Oak, boucle, leather, steel...")
+            dimensions = st.text_input("Dimensions", placeholder="72 x 34 x 30 in")
+        with form_cols[1]:
+            price = st.number_input("Price", min_value=0.01, value=499.0, step=10.0)
+            stock_quantity = st.number_input("Available quantity", min_value=1, value=1, step=1)
+            description = st.text_area("Description", placeholder="Describe condition, style, included parts, and delivery notes.", height=132)
+        submitted = st.form_submit_button("Publish listing", type="primary", use_container_width=True)
+        if submitted:
+            try:
+                created_product = product_service.create_product(
+                    session,
+                    user,
+                    {
+                        "sku": generate_seller_sku(user),
+                        "name": name,
+                        "category": category,
+                        "material": material,
+                        "dimensions": dimensions,
+                        "price": price,
+                        "stock_quantity": int(stock_quantity),
+                        "description": description,
+                    },
+                )
+                seller_products = [created_product] + seller_products
+                st.success(f"{created_product.name} is now listed in the marketplace.")
+            except ValidationError as exc:
+                st.error(str(exc))
+
+    render_section_title("Your listings", "Seller inventory", "Products created from this account appear here and in the buyer catalog.")
+    if seller_products:
+        render_product_cards(seller_products, limit=12)
+    else:
+        st.info("No seller listings yet. Publish your first item above.")
+
+
 def render_shop_view(user) -> None:
     render_page_header(
-        "Shop",
-        "Order from the active catalog",
-        "Select a product, enter validated delivery details, review the regional assignment, and submit the order after confirmation.",
+        "Marketplace",
+        "Buy and sell furniture",
+        "Switch between buying from the active catalog and listing your own products for other customers.",
     )
 
     if "shop_step" not in st.session_state:
@@ -651,6 +792,17 @@ def render_shop_view(user) -> None:
         st.session_state.shop_draft = {}
 
     with get_session() as session:
+        market_mode = st.radio(
+            "Marketplace mode",
+            ["Buy", "Sell"],
+            horizontal=True,
+            key="marketplace_mode",
+            help="Buy places a delivery order. Sell publishes a marketplace product.",
+        )
+        if market_mode == "Sell":
+            render_seller_mode(user, session)
+            return
+
         filters = st.columns([0.28, 0.72], gap="large")
         with filters[0]:
             selected_category = st.selectbox("Category", ["All"] + product_service.categories(session))
@@ -669,13 +821,12 @@ def render_shop_view(user) -> None:
                 st.markdown(
                     f"""
                     <div class="product-card">
-                        <div class="product-art">
+                        <div class="product-art" style="{product_image_style(product)}">
                             <span class="product-art-badge">{escape(product.category)}</span>
-                            <span class="product-art-mark">{escape(product.name[:2].upper())}</span>
                         </div>
                         <div class="section-title">{escape(product.name)}</div>
                         <div class="section-subtitle">{escape(product.material)} · {escape(product.dimensions)}</div>
-                        <div style="margin-top:0.65rem;font-size:1.2rem;font-weight:800;color:#111827;">{currency(product.price)}</div>
+                        <div style="margin-top:0.65rem;font-size:1.2rem;font-weight:800;color:var(--text);">{currency(product.price)}</div>
                         <div class="mini-note" style="margin-top:0.4rem;">{escape(product.description)}</div>
                         <div class="mini-note" style="margin-top:0.65rem;">{product.stock_quantity} units available</div>
                     </div>
@@ -1383,6 +1534,7 @@ def dispatch_view(user, active_view: str) -> None:
 
 
 configure_page("Geo Furniture Ops", icon="🪑", sidebar_state="collapsed")
+st.session_state.setdefault("app_theme", "light")
 inject_styles()
 init_db()
 
@@ -1394,5 +1546,5 @@ if not current_user:
     render_auth_view()
 else:
     render_topbar(current_user)
-    dispatch_view(current_user, active_view)
     render_bottom_nav(current_user, active_view)
+    dispatch_view(current_user, active_view)

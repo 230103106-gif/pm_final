@@ -91,7 +91,7 @@ ROLE_NAVIGATION = {
     ],
     ROLE_CUSTOMER: [
         {"view": "overview", "label": "Overview", "icon": "home"},
-        {"view": "shop", "label": "Shop", "icon": "bag"},
+        {"view": "shop", "label": "Marketplace", "icon": "bag"},
         {"view": "orders", "label": "Orders", "icon": "package"},
         {"view": "profile", "label": "Profile", "icon": "user"},
     ],

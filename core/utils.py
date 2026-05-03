@@ -66,28 +66,51 @@ def configure_page(title: str, icon: str = "🪑", sidebar_state: str = "collaps
 
 
 def inject_styles() -> None:
+    theme = st.session_state.get("app_theme", "light")
     st.markdown(
         """
         <style>
             :root {
-                --primary: #2563EB;
-                --primary-soft: #EFF6FF;
-                --secondary: #0891B2;
-                --accent: #10B981;
+                --primary: #B45309;
+                --primary-soft: #FFF3D7;
+                --secondary: #0F766E;
+                --accent: #D97706;
                 --warning: #F59E0B;
-                --background: #F9FAFB;
-                --surface: rgba(255, 255, 255, 0.96);
-                --surface-alt: #F3F4F6;
-                --text: #111827;
-                --muted: #6B7280;
-                --border: rgba(15, 23, 42, 0.10);
-                --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+                --background: #FBF7F0;
+                --app-background: linear-gradient(180deg, #FFF8ED 0%, #F6E8D0 56%, #FFFDF8 100%);
+                --surface: rgba(255, 252, 246, 0.96);
+                --surface-alt: #FFF7ED;
+                --field-bg: #FFFDF8;
+                --field-border: rgba(120, 79, 45, 0.14);
+                --progress-track: #E9DED1;
+                --text: #1F2933;
+                --muted: #756A5B;
+                --border: rgba(120, 79, 45, 0.16);
+                --shadow: 0 18px 48px rgba(92, 55, 25, 0.12);
                 --radius-xl: 18px;
                 --radius-lg: 16px;
                 --radius-md: 12px;
             }
+            :root[data-theme="dark"] {
+                --primary: #FBBF24;
+                --primary-soft: rgba(251, 191, 36, 0.16);
+                --secondary: #5EEAD4;
+                --accent: #F97316;
+                --warning: #F59E0B;
+                --background: #16130F;
+                --app-background: linear-gradient(180deg, #15110D 0%, #23180F 55%, #11100E 100%);
+                --surface: rgba(38, 32, 25, 0.94);
+                --surface-alt: rgba(56, 46, 34, 0.92);
+                --field-bg: rgba(30, 26, 22, 0.92);
+                --field-border: rgba(255, 237, 213, 0.14);
+                --progress-track: rgba(255, 237, 213, 0.14);
+                --text: #FFF7ED;
+                --muted: #D6C7B5;
+                --border: rgba(255, 237, 213, 0.16);
+                --shadow: 0 18px 52px rgba(0, 0, 0, 0.36);
+            }
             .stApp {
-                background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 55%, #F8FAFC 100%);
+                background: var(--app-background);
                 color: var(--text);
                 font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
             }
@@ -134,8 +157,8 @@ def inject_styles() -> None:
             .topbar-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.84);
-                box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 padding: 1.05rem 1.15rem;
                 margin-bottom: 1.15rem;
                 backdrop-filter: blur(10px);
@@ -147,8 +170,8 @@ def inject_styles() -> None:
             .scope-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.84);
-                box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 min-height: 3.35rem;
                 padding: 0.55rem 0.8rem;
                 margin-bottom: 0.7rem;
@@ -252,8 +275,8 @@ def inject_styles() -> None:
             }
             .detail-item {
                 border-radius: var(--radius-md);
-                border: 1px solid rgba(17, 24, 39, 0.06);
-                background: linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
+                border: 1px solid var(--field-border);
+                background: var(--field-bg);
                 padding: 0.8rem 0.9rem;
                 min-width: 0;
             }
@@ -278,8 +301,8 @@ def inject_styles() -> None:
             .order-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.96);
-                box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 padding: 1rem 1.05rem;
             }
             .order-card-head {
@@ -308,8 +331,8 @@ def inject_styles() -> None:
             }
             .order-field {
                 border-radius: 10px;
-                background: #F8FAFC;
-                border: 1px solid rgba(15, 23, 42, 0.06);
+                background: var(--field-bg);
+                border: 1px solid var(--field-border);
                 padding: 0.62rem 0.68rem;
                 min-width: 0;
             }
@@ -335,8 +358,8 @@ def inject_styles() -> None:
             .focus-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.96);
-                box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 padding: 1.05rem 1.15rem;
             }
             .focus-card-value {
@@ -352,8 +375,8 @@ def inject_styles() -> None:
             .analytics-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.96);
-                box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 padding: 1rem 1rem 0.75rem 1rem;
                 margin-bottom: 1.05rem;
                 overflow: hidden;
@@ -372,7 +395,7 @@ def inject_styles() -> None:
             .detail-row {
                 border: 1px solid rgba(15, 23, 42, 0.08);
                 border-radius: 12px;
-                background: #FFFFFF;
+                background: var(--surface);
                 padding: 0.78rem 0.85rem;
             }
             .region-row {
@@ -413,7 +436,7 @@ def inject_styles() -> None:
                 width: 100%;
                 height: 9px;
                 border-radius: 999px;
-                background: #E5E7EB;
+                background: var(--progress-track);
                 overflow: hidden;
                 margin-top: 0.55rem;
             }
@@ -428,13 +451,26 @@ def inject_styles() -> None:
                 gap: 0.85rem;
                 margin: 0.75rem 0 1.1rem 0;
             }
+            .product-list-image {
+                min-height: 154px;
+                border-radius: 14px;
+                background-size: cover;
+                background-position: center;
+                border: 1px solid var(--field-border);
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                padding: 0.78rem;
+                margin-bottom: 0.88rem;
+                overflow: hidden;
+            }
             .product-list-card,
             .event-card,
             .audit-card {
                 border: 1px solid var(--border);
                 border-radius: var(--radius-lg);
-                background: rgba(255, 255, 255, 0.96);
-                box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+                background: var(--surface);
+                box-shadow: var(--shadow);
                 padding: 1rem 1.05rem;
                 min-width: 0;
             }
@@ -488,22 +524,26 @@ def inject_styles() -> None:
                 min-height: 148px;
                 border-radius: 18px;
                 background:
-                    linear-gradient(140deg, rgba(79, 70, 229, 0.10), rgba(6, 182, 212, 0.12)),
-                    linear-gradient(180deg, #FFFFFF 0%, #EEF2FF 100%);
-                border: 1px solid rgba(79, 70, 229, 0.08);
+                    linear-gradient(140deg, rgba(180, 83, 9, 0.12), rgba(15, 118, 110, 0.12)),
+                    linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+                background-size: cover;
+                background-position: center;
+                border: 1px solid var(--field-border);
                 display: flex;
-                align-items: flex-end;
-                justify-content: space-between;
+                align-items: flex-start;
+                justify-content: flex-start;
                 padding: 1rem;
                 margin-bottom: 0.9rem;
+                overflow: hidden;
             }
             .product-art-badge {
                 border-radius: 999px;
-                background: rgba(79, 70, 229, 0.12);
+                background: rgba(255, 248, 237, 0.92);
                 color: var(--primary);
                 font-size: 0.76rem;
                 font-weight: 700;
                 padding: 0.35rem 0.65rem;
+                box-shadow: 0 8px 24px rgba(38, 32, 25, 0.12);
             }
             .product-art-mark {
                 font-size: 2rem;
@@ -517,7 +557,7 @@ def inject_styles() -> None:
                 gap: 0.45rem;
                 border-radius: 999px;
                 padding: 0.48rem 0.78rem;
-                background: rgba(79, 70, 229, 0.10);
+                background: var(--primary-soft);
                 color: var(--primary);
                 font-size: 0.84rem;
                 font-weight: 700;
@@ -529,24 +569,62 @@ def inject_styles() -> None:
             div[data-baseweb="select"] > div,
             .stTextArea textarea {
                 border-radius: 14px !important;
-                border-color: rgba(17, 24, 39, 0.12) !important;
-                background: rgba(255, 255, 255, 0.95) !important;
+                border-color: var(--field-border) !important;
+                background: var(--field-bg) !important;
+                color: var(--text) !important;
+            }
+            input,
+            textarea,
+            [data-baseweb="select"] {
+                color: var(--text) !important;
+            }
+            input::placeholder,
+            textarea::placeholder {
+                color: var(--muted) !important;
+                opacity: 0.9 !important;
+            }
+            [data-testid="stWidgetLabel"] p,
+            [data-testid="stWidgetLabel"] label,
+            .stRadio label,
+            .stCheckbox label,
+            .stToggle label,
+            .stSelectbox label,
+            .stTextInput label,
+            .stTextArea label,
+            .stNumberInput label {
+                color: var(--text) !important;
+            }
+            .stRadio p,
+            .stCheckbox p,
+            .stToggle p {
+                color: var(--text) !important;
             }
             .stButton > button,
             .stDownloadButton > button {
                 border-radius: 14px !important;
                 font-weight: 700 !important;
                 min-height: 2.8rem;
-                border: 1px solid rgba(17, 24, 39, 0.08) !important;
+                border: 1px solid var(--border) !important;
+                background: var(--surface) !important;
+                color: var(--text) !important;
                 white-space: nowrap !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
             }
             .stButton > button[kind="primary"],
-            .stDownloadButton > button[kind="primary"] {
-                background: linear-gradient(135deg, #4F46E5, #06B6D4) !important;
+            .stDownloadButton > button[kind="primary"],
+            .stFormSubmitButton button[kind="primary"],
+            button[data-testid="stBaseButton-primary"] {
+                background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
                 color: white !important;
                 border: none !important;
+            }
+            button[role="tab"][aria-selected="true"] p {
+                color: var(--primary) !important;
+                font-weight: 800 !important;
+            }
+            div[data-baseweb="tab-highlight"] {
+                background-color: var(--primary) !important;
             }
             button[data-signout-button="true"] {
                 background: #FEF2F2 !important;
@@ -568,8 +646,109 @@ def inject_styles() -> None:
             }
             div[data-testid="stForm"] {
                 border-radius: var(--radius-lg);
-                border-color: rgba(15, 23, 42, 0.14);
-                background: rgba(255, 255, 255, 0.64);
+                border-color: var(--border);
+                background: color-mix(in srgb, var(--surface) 76%, transparent);
+            }
+            .top-nav-shell {
+                margin: 0 0 0.42rem 0;
+            }
+            .auth-backdrop {
+                position: fixed;
+                inset: 0;
+                z-index: 0;
+                background-size: cover;
+                background-position: center;
+            }
+            .auth-tint {
+                position: fixed;
+                inset: 0;
+                z-index: 0;
+                background:
+                    radial-gradient(circle at 76% 18%, rgba(255, 237, 213, 0.75), transparent 34%),
+                    linear-gradient(180deg, rgba(255, 248, 237, 0.18), rgba(255, 248, 237, 0.48));
+                pointer-events: none;
+            }
+            .block-container {
+                position: relative;
+                z-index: 1;
+            }
+            .auth-copy {
+                min-height: 58vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                color: #FFF7ED;
+                padding: 2rem 0 2rem 0;
+            }
+            .auth-pill {
+                width: fit-content;
+                border: 1px solid rgba(255, 247, 237, 0.34);
+                border-radius: 999px;
+                background: rgba(255, 247, 237, 0.14);
+                color: #FFF7ED;
+                font-weight: 800;
+                padding: 0.52rem 0.8rem;
+                backdrop-filter: blur(12px);
+            }
+            .auth-title {
+                max-width: 650px;
+                color: #FFF7ED;
+                font-size: clamp(2.6rem, 6vw, 5rem);
+                line-height: 0.98;
+                font-weight: 900;
+                margin-top: 1.3rem;
+                letter-spacing: 0;
+            }
+            .auth-subtitle {
+                max-width: 620px;
+                color: rgba(255, 247, 237, 0.88);
+                font-size: 1.08rem;
+                line-height: 1.55;
+                margin-top: 1.15rem;
+            }
+            .auth-stats {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.85rem;
+                max-width: 540px;
+                margin-top: 1.45rem;
+            }
+            .auth-stats div {
+                border: 1px solid rgba(255, 247, 237, 0.2);
+                border-radius: 16px;
+                background: rgba(42, 27, 15, 0.34);
+                padding: 0.9rem 1rem;
+                backdrop-filter: blur(12px);
+            }
+            .auth-stats strong {
+                display: block;
+                color: #FFE8A3;
+                font-size: 1.05rem;
+            }
+            .auth-stats span {
+                color: rgba(255, 247, 237, 0.78);
+                font-size: 0.82rem;
+            }
+            .auth-panel-heading {
+                border: 1px solid var(--border);
+                border-radius: 24px;
+                background: color-mix(in srgb, var(--surface) 88%, transparent);
+                box-shadow: var(--shadow);
+                padding: 1.35rem 1.45rem;
+                margin-top: 5.7rem;
+                margin-bottom: 1rem;
+                backdrop-filter: blur(18px);
+            }
+            .auth-panel-title {
+                color: var(--text);
+                font-size: 2rem;
+                font-weight: 900;
+                line-height: 1.1;
+            }
+            .auth-panel-note {
+                color: var(--muted);
+                margin-top: 0.45rem;
+                font-size: 0.96rem;
             }
             @media (max-width: 720px) {
                 .block-container {
@@ -594,6 +773,19 @@ def inject_styles() -> None:
                 .row-number {
                     text-align: left;
                 }
+                .auth-copy {
+                    min-height: auto;
+                    padding-top: 1rem;
+                }
+                .auth-title {
+                    font-size: 2.4rem;
+                }
+                .auth-stats {
+                    grid-template-columns: 1fr;
+                }
+                .auth-panel-heading {
+                    margin-top: 0;
+                }
             }
         </style>
         """,
@@ -602,8 +794,10 @@ def inject_styles() -> None:
     components.html(
         """
         <script>
+            const appTheme = __APP_THEME__;
             const removeSubmitHints = () => {
                 const doc = window.parent.document;
+                doc.documentElement.dataset.theme = appTheme;
                 doc.querySelectorAll('[title="Press Enter to submit form"]').forEach((node) => {
                     node.removeAttribute('title');
                 });
@@ -621,7 +815,7 @@ def inject_styles() -> None:
                 attributeFilter: ['title']
             });
         </script>
-        """,
+        """.replace("__APP_THEME__", json.dumps(theme)),
         height=0,
     )
 
