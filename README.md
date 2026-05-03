@@ -204,7 +204,7 @@ final_project/
 - Expand test coverage with full lifecycle transition scenarios and page-level integration tests
 
 ## Team Members
-- Didar Nuray– PM & System Architect
-- Ayaulym Serik– Backend Developer
-- Srazha Ayaulym - Data Engineer
-- Amangeldi Fariza - Frontend Developer
+- Didar Nuray 230103268 – PM & System Architect
+- Ayaulym Serik 230103106 – Backend Developer
+- Srazha Ayaulym 230103181 - Data Engineer
+- Amangeldi Fariza 230103153 - Frontend Developer
