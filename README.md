@@ -72,6 +72,13 @@ API Layer (FastAPI)
   OpenAPI schema: /openapi.json
 ```
 
+## Technology Stack
+### Back-end
+fast API, sqLite
+### Front-end 
+StreamLit
+### Geospatial Logic
+H3 Indexing
 ## Key Features
 
 ### Customer ordering flow
@@ -194,14 +201,6 @@ final_project/
   data/
   tests/
 ```
-
-## Future Improvements
-
-- Move sessions from Streamlit state plus SQLite records to signed browser cookies
-- Add warehouse entities and many-to-many regional coverage instead of a single assigned region
-- Integrate map-based region visualization with H3 cell overlays
-- Add email or webhook delivery for warehouse event notifications
-- Expand test coverage with full lifecycle transition scenarios and page-level integration tests
 
 ## Team Members
 - Didar Nuray 230103268 – PM & System Architect
