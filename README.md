@@ -1,7 +1,7 @@
 # Geo-Optimized Furniture Order Management System
 
 A FastAPI backend plus optional Streamlit workspace for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
-
+his project provides a practical and secure furniture order management system that combines FastAPI, Streamlit, SQLite, and H3 geospatial logic. It supports customers, admins, and warehouse managers with role-based workflows, order tracking, analytics, and audit logging.
 
 ## What It Does
 
