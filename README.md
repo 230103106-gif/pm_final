@@ -5,15 +5,24 @@ A FastAPI backend plus optional Streamlit workspace for furniture order intake, 
 
 ## What It Does
 
-- Exposes a Swagger/Postman-ready API for authentication, orders, products, warehouse events, analytics, and audit logs
-- Runs an optional customer storefront for placing furniture orders through a staged confirmation flow
-- Manages a realistic order lifecycle: `Created -> Confirmed -> Assigned -> Packed -> Out for Delivery -> Delivered`
-- Enforces both role-based access control and region-based attribute access control
-- Uses H3 geospatial indexing to map delivery coordinates into operational regions
-- Persists all users, products, orders, warehouse events, sessions, and audit logs in SQLite
-- Simulates an event-driven warehouse queue when orders are created
-- Provides exportable operational data: `orders.csv`, `products.json`, and `logs.json`
-- Includes initial operational data for immediate use
+Exposes a Swagger/Postman-ready API for authentication, orders, products, warehouse events, analytics, and audit logs
+
+Runs an optional customer storefront for placing furniture orders through a staged confirmation flow
+
+Manages a realistic order lifecycle: 
+`Created -> Confirmed -> Assigned -> Packed -> Out for Delivery -> Delivered`
+
+Enforces both role-based access control and region-based attribute access control
+
+Uses H3 geospatial indexing to map delivery coordinates into operational regions
+
+Persists all users, products, orders, warehouse events, sessions, and audit logs in SQLite
+
+Simulates an event-driven warehouse queue when orders are created
+
+Provides exportable operational data: `orders.csv`, `products.json`, and `logs.json`
+
+Includes initial operational data for immediate use
 
 ## Architecture
 
