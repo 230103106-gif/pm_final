@@ -1,4 +1,4 @@
-# Geo-Optimized Furniture Order Management System
+# Geo-Optimized Furniture Order Management System 
 
 A FastAPI backend plus optional Streamlit workspace for furniture order intake, regional warehouse operations, and fulfillment analytics. The system combines persistent SQLite storage, H3 geospatial assignment, role-aware operations workflows, and a full audit trail.
 
@@ -13,15 +13,10 @@ Manages a realistic order lifecycle:
 `Created -> Confirmed -> Assigned -> Packed -> Out for Delivery -> Delivered`
 
 Enforces both role-based access control and region-based attribute access control
-
 Uses H3 geospatial indexing to map delivery coordinates into operational regions
-
 Persists all users, products, orders, warehouse events, sessions, and audit logs in SQLite
-
 Simulates an event-driven warehouse queue when orders are created
-
 Provides exportable operational data: `orders.csv`, `products.json`, and `logs.json`
-
 Includes initial operational data for immediate use
 
 ## Architecture
